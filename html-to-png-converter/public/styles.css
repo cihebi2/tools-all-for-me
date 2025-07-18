@@ -1,0 +1,394 @@
+/* HTML转PNG转换工具样式表 */
+
+:root {
+  --primary-color: #667eea;
+  --secondary-color: #764ba2;
+  --success-color: #28a745;
+  --info-color: #17a2b8;
+  --warning-color: #ffc107;
+  --danger-color: #dc3545;
+  --light-color: #f8f9fa;
+  --dark-color: #343a40;
+  --border-radius: 10px;
+  --box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  --transition: all 0.3s ease;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  padding: 20px;
+  color: #333;
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  background: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  overflow: hidden;
+}
+
+.header {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: white;
+  padding: 30px;
+  text-align: center;
+}
+
+.header h1 {
+  font-size: 2.5em;
+  margin-bottom: 10px;
+}
+
+.header p {
+  font-size: 1.1em;
+  opacity: 0.9;
+}
+
+.main-content {
+  padding: 40px;
+}
+
+.form-section {
+  margin-bottom: 30px;
+}
+
+.form-section h3 {
+  color: #333;
+  margin-bottom: 15px;
+  font-size: 1.3em;
+  display: flex;
+  align-items: center;
+}
+
+.form-section h3 i {
+  margin-right: 10px;
+  color: var(--primary-color);
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #555;
+}
+
+textarea, input, select {
+  width: 100%;
+  padding: 12px;
+  bord00%;
+  }
+}    width: 1{
+convert-btn   
+  .fr;
+  }
+-columns: 1d-template
+    grid {-gringstti 
+  .se
+ 20px;
+  }: dding   pat {
+ -conten 
+  .mainem;
+  }
+ -size: 1.8  font1 {
+  der h 
+  .hea
+ }g: 20px;
+  din   padader {
+ .he 
+  
+ ;
+  }gin: 10px mar
+   container { .
+ 68px) {width: 7max-edia (
+@m 响应式设计 */ 1;
+}
+
+/*ity:ble;
+  opacsiy: vibilitsi  vi-text {
+.tooltipp:hover ooltis;
+}
+
+.topacity 0.3on: ransitiity: 0;
+  t);
+  opac-50%teX( translansform:50%;
+  tra:  left: 125%;
+ 
+  bottomindex: 1;;
+  z-teion: absolupx;
+  posit  padding: 5s: 6px;
+r-radiudeter;
+  borlign: cent-a
+  tex: #fff;or3;
+  col#33ound-color: ;
+  backgr0pxwidth: 20
+  idden;ibility: h {
+  vistext.tooltip-oltip 
+}
+
+.to: 5px;rgin-left
+  mae-block;lay: inlin;
+  disprelativesition: tip {
+  poool
+}
+
+.tid #e1e5e9;op: 1px sol  border-t
+size: 0.9em;nt-;
+  fo: #666color0px;
+  dding: 2er;
+  paign: centext-aloter {
+  t
+}
+
+.fo 15px;margin-top:y: none;
+  pladisntent {
+  d-co
+
+.advance;
+}entwent: space-be-conteustify
+  jer;-items: cent;
+  alignplay: flex dis pointer;
+ or: curstoggle {
+ 
+.advanced-);
+}
+er-radiusvar(--border-radius: 9fa;
+  bordf8f #nd:
+  backgrou 15px;dding:x;
+  paop: 20pgin-t
+  mar{ptions advanced-o
+.}
+p;
+rae: nowace-sphitutton {
+  w-input b
+.url 1;
+}
+{
+  flex:t input rl-inpu
+.ux;
+}
+
+  gap: 10py: flex;pladisnput {
+  
+}
+
+.url-ir: #666;x;
+  cologin-top: 10p  mar {
+e-upload p
+
+.fil: none;
+}
+  displayoad input {.file-upl
+
+-color);
+}r(--primaryer-color: va bordhover {
+ ile-upload:);
+}
+
+.f--transitionion: var(sitran;
+  tor: pointerter;
+  curscengn: -alitextx;
+   30padding:adius);
+  p-rrderus: var(--bo-radi
+  bordere9;dashed #e1e5er: 2px  {
+  bordloadile-upck;
+}
+
+.fy: blosplaive {
+  diontent.act
+
+.tab-c
+}none;
+  display: -content {
+}
+
+.tabht: bold;font-weig
+  y-color);ar(--primvar
+  color: );-colorry-primad var(-soliom: 2px der-bott  bor.active {
+
+}
+
+.tabsition);an(--tr vartion:
+  transisparent;lid tran 2px soer-bottom:ord;
+  btercursor: poinpx;
+  2010px adding: 
+  p {
+.tab}
+9;
+5ex solid #e1e 1pr-bottom:px;
+  borden-bottom: 20margi flex;
+  isplay:.tabs {
+  dx;
+}
+
+2pe: 1iz
+  font-s5px;gin: nter;
+  marrsor: poi
+  cuus: 5px;adi border-r5px;
+ ing: 8px 1padd
+  : none;erte;
+  bordcolor: whi-color);
+  --info: var( backgroundle-btn {
+ }
+
+.exampius);
+--border-radar(ius: v border-radcolor);
+ ht-ig--lground: var( back
+ 20px; padding: ;
+ 30pxargin-top: es {
+  mxampl
+
+.ey: none;
+}
+  displapx 0;gin: 208px;
+  maradius: order-rpx;
+  b 15  padding:c24;
+721r: #7da;
+  colond: #f8d backgrou
+ error {
+.lock;
+}
+: inline-b;
+  displayation: nonet-decorx;
+  tex15pargin-top: ointer;
+  mursor: p25px;
+  cius: rder-rad;
+  box 25pxdding: 10p none;
+  pa border:e;
+ whitlor: ;
+  cor)los-coar(--succesground: v  back {
+ad-btn
+
+.downlo.1);
+}ba(0,0,0,0 15px rg 5pxow: 0
+  box-shad8px;us: r-radi  bordedth: 100%;
+ {
+  max-wiresult img
+}
+
+.r-radius);r(--bordedius: va  border-raor);
+t-colligh: var(--ckground
+  bag: 20px; paddin: 30px;
+ rgin-topmacenter;
+  ext-align: 
+  tplay: none;t {
+  disul}
+}
+
+.reseg); te(360drm: rota0% { transfo  10(0deg); }
+ rotatensform:tra{
+  0% { n s spiframe
+}
+
+@keyo 10px;0 aut margin: finite;
+ near inin 1s limation: sp40px;
+  ani: 
+  height40px;:   widthdius: 50%;
+r-radeborlor);
+  ry-coar(--primalid v: 4px sotopder-f3;
+  bor#f3f3 solid  border: 4pxspinner {
+ .loading-x 0;
+}
+
+rgin: 20penter;
+  ma-align: cext
+  tne;display: nong {
+  di
+}
+
+.loae;orm: non transfed;
+ t-allow  cursor: no6;
+city: 0.ed {
+  opabtn:disabl
+.convert-
+}
+0,0.2);gba(0,0, 20px r 0 10pxadow:  box-sheY(-2px);
+translatform: trans{
+  tn:hover ert-b
+
+.conv}x auto;
+: 30p
+  marginay: block;  displon);
+ansiti: var(--tron
+  transitior: pointer;curs 50px;
+  der-radius:;
+  bor: 1.1emsize;
+  font-15px 40px
+  padding: r: none; bordeite;
+ 
+  color: wh%);olor) 100ndary-c--secoor) 0%, var(primary-colar(--g, vderadient(135: linear-gound {
+  backgrvert-btn
+}
+
+.conite; color: wholor);
+ nfo-c var(--ibackground:{
+  fo -in
+}
+
+.btne;olor: whit c
+ r);color(--success-ound: va{
+  backgrccess 
+
+.btn-suite;
+}: whcolor
+  100%);ary-color) ar(--second0%, v-color) ar(--primaryeg, v(135dientinear-grad l background: {
+ tn-primary
+
+.bter;
+}lign: cen text-an);
+ ansitio-trition: var(-anstr 1em;
+    font-size:inter;
+sor: pocur  px;
+r-radius: 50deone;
+  bor
+  border: n0px;ing: 10px 2 paddblock;
+ e-nlinay: i
+  displtn {;
+}
+
+.bth: auto
+  wid] {eckbox"type="chinput[ox-group heckb
+
+.c0px;
+}  gap: 1er;
+tems: centgn-i ali flex;
+ lay:{
+  dispup kbox-gro
+
+.chec0px;
+}
+  gap: 2));px, 1frax(200minmo-fit, aut: repeat(te-columnsplagrid-temid;
+  display: grrid {
+  
+.settings-g1);
+}
+234, 0.6, 122, 100 3px rgba(ow: 0 0 
+  box-shador);primary-collor: var(--  border-coine: none;
+s {
+  outlselect:focuus, ocut:f:focus, inpreatextal;
+}
+
+verticaize:   resmonospace;
+', ewrier Nmily: 'Couont-fa 200px;
+  f-height:  mintextarea {
+);
+}
+
+ansitionn: var(--trnsitiora te: 14px;
+ 
+  font-sizius: 8px;border-rad   #e1e5e9;
+px solider: 2

@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML转PNG高清转换工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+        }
+
+        .form-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        textarea, input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        textarea {
+            min-height: 200px;
+            font-family: 'Courier New', monospace;
+            resize: vertical;
+        }
+
+        textarea:focus, input:focus, select:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+
+        .convert-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            display: block;
+            margin: 30px auto;
+        }
+
+        .convert-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .convert-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4facfe;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result {
+            display: none;
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .result img {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .download-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-top: 15px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .examples {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .example-btn {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 HTML转PNG转换工具</h1>
+            <p>高清无损转换，支持自定义尺寸和缩放</p>
+        </div>
+
+        <div class="main-content">
+            <form id="convertForm">
+                <div class="form-section">
+                    <h3>📝 HTML内容</h3>
+                    <div class="form-group">
+                        <label for="htmlContent">请输入HTML代码:</label>
+                        <textarea id="htmlContent" placeholder="在这里输入您的HTML代码..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>⚙️ 转换设置</h3>
+                    <div class="settings-grid">
+                        <div class="form-group">
+                            <label for="width">宽度 (px):</label>
+                            <input type="number" id="width" value="1920" min="100" max="4000">
+                        </div>
+                        <div class="form-group">
+                            <label for="height">高度 (px):</label>
+                            <input type="number" id="height" value="1080" min="100" max="4000">
+                        </div>
+                        <div class="form-group">
+                            <label for="scale">缩放倍数:</label>
+                            <select id="scale">
+                                <option value="1">1x (标准)</option>
+                                <option value="2" selected>2x (高清)</option>
+                                <option value="3">3x (超高清)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-grid" style="margin-top: 20px;">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="fullPage" checked>
+                            <label for="fullPage">完整页面截图</label>
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="transparent">
+                            <label for="transparent">透明背景</label>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="convert-btn" id="convertBtn">
+                    🚀 开始转换
+                </button>
+            </form>
+
+            <div class="loading" id="loading">
+                <div class="loading-spinner"></div>
+                <p>正在转换中，请稍候...</p>
+            </div>
+
+            <div class="error" id="error"></div>
+
+            <div class="result" id="result">
+                <h3>✅ 转换完成</h3>
+                <img id="resultImage" alt="转换结果">
+                <br>
+                <a href="#" class="download-btn" id="downloadBtn" download="converted.png">📥 下载图片</a>
+            </div>
+
+            <div class="examples">
+                <h3>💡 示例HTML代码</h3>
+                <p>点击下面的按钮快速加载示例:</p>
+                <button type="button" class="example-btn" onclick="loadExample('card')">商务卡片</button>
+                <button type="button" class="example-btn" onclick="loadExample('chart')">数据图表</button>
+                <button type="button" class="example-btn" onclick="loadExample('banner')">横幅广告</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
