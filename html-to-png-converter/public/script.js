@@ -3,11 +3,15 @@
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('convertForm');
     const convertBtn = document.getElementById('convertBtn');
+    const splitCardsBtn = document.getElementById('splitCardsBtn');
     const loading = document.getElementById('loading');
     const error = document.getElementById('error');
     const result = document.getElementById('result');
     const resultImage = document.getElementById('resultImage');
     const downloadBtn = document.getElementById('downloadBtn');
+    const cardResult = document.getElementById('cardResult');
+    const cardInfo = document.getElementById('cardInfo');
+    const downloadCardsBtn = document.getElementById('downloadCardsBtn');
 
     // 表单提交处理
     form.addEventListener('submit', async function(e) {
@@ -29,6 +33,25 @@ document.addEventListener('DOMContentLoaded', function() {
         };
 
         await convertHtmlToPng(options);
+    });
+
+    // 卡片分割按钮处理
+    splitCardsBtn.addEventListener('click', async function() {
+        const htmlContent = document.getElementById('htmlContent').value.trim();
+        if (!htmlContent) {
+            showError('请输入HTML内容');
+            return;
+        }
+
+        const options = {
+            html: htmlContent,
+            width: parseInt(document.getElementById('width').value),
+            height: parseInt(document.getElementById('height').value),
+            scale: parseFloat(document.getElementById('scale').value),
+            outputFormat: 'zip'
+        };
+
+        await splitCards(options);
     });
 
     // 转换函数
@@ -74,6 +97,60 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // 卡片分割函数
+    async function splitCards(options) {
+        try {
+            showCardLoading();
+            hideError();
+            hideCardResult();
+
+            const response = await fetch('/api/split-cards', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(options)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || '卡片分割失败');
+            }
+
+            if (options.outputFormat === 'zip') {
+                const blob = await response.blob();
+                const downloadUrl = URL.createObjectURL(blob);
+                
+                // 设置下载链接
+                downloadCardsBtn.href = downloadUrl;
+                
+                // 获取卡片数量和处理时间
+                const cardsCount = response.headers.get('X-Cards-Count');
+                const processingTime = response.headers.get('X-Processing-Time');
+                
+                // 显示分割信息
+                let infoText = '成功分割卡片！';
+                if (cardsCount) {
+                    infoText += `<br>📊 共生成 ${cardsCount} 张卡片图片`;
+                }
+                if (processingTime) {
+                    infoText += `<br>⏱️ 处理时间: ${processingTime}ms`;
+                }
+                
+                cardInfo.innerHTML = infoText;
+                showCardResult();
+                
+                console.log(`卡片分割完成，生成 ${cardsCount} 张图片，耗时: ${processingTime}ms`);
+            }
+            
+        } catch (err) {
+            console.error('卡片分割错误:', err);
+            showError(err.message);
+        } finally {
+            hideCardLoading();
+        }
+    }
+
     // 显示/隐藏状态函数
     function showLoading() {
         loading.style.display = 'block';
@@ -102,6 +179,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function hideResult() {
         result.style.display = 'none';
+    }
+
+    // 卡片分割状态函数
+    function showCardLoading() {
+        loading.style.display = 'block';
+        splitCardsBtn.disabled = true;
+        splitCardsBtn.textContent = '分割中...';
+        convertBtn.disabled = true;
+    }
+
+    function hideCardLoading() {
+        loading.style.display = 'none';
+        splitCardsBtn.disabled = false;
+        splitCardsBtn.textContent = '🃏 分割卡片';
+        convertBtn.disabled = false;
+    }
+
+    function showCardResult() {
+        cardResult.style.display = 'block';
+    }
+
+    function hideCardResult() {
+        cardResult.style.display = 'none';
     }
 
     // 示例HTML模板
@@ -232,6 +332,127 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="content">
             <div class="title">🎉 新品发布</div>
             <div class="subtitle">革命性产品，改变未来</div>
+        </div>
+    </div>
+</body>
+</html>`,
+
+            multiCard: `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多卡片模板</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: '#1B2951',
+                        burgundy: '#800020',
+                        forest: '#355E3B'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100 p-4">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">卡片分割示例</h1>
+
+        <!-- 卡片1 - Burgundy主题 -->
+        <div class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden" style="width: 375px; height: 812px; margin: 0 auto;">
+                <div class="relative h-full">
+                    <div class="relative h-64 bg-gradient-to-br from-burgundy via-navy to-gray-700 overflow-hidden">
+                        <div class="relative z-10 p-6 h-full flex flex-col justify-between text-white">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="text-xs uppercase tracking-wider text-blue-200">BUSINESS CARD</div>
+                                    <div class="text-xs text-blue-300">示例卡片 · 2025</div>
+                                </div>
+                                <div class="bg-white/10 backdrop-blur-sm px-3 py-1 rounded-full text-xs">标签1</div>
+                            </div>
+                            <div>
+                                <h1 class="text-xl font-serif leading-tight mb-3">业务卡片 1</h1>
+                                <p class="text-sm text-blue-200 mb-4">这是第一张卡片的描述</p>
+                                <div class="flex items-center space-x-4 text-xs text-blue-300">
+                                    <span>示例内容 2025-01-20</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6 space-y-6">
+                        <div class="text-center">
+                            <p class="text-gray-600">这里是卡片内容区域</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 卡片2 - Forest主题 -->
+        <div class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden" style="width: 375px; height: 812px; margin: 0 auto;">
+                <div class="relative h-full">
+                    <div class="relative h-64 bg-gradient-to-br from-forest via-navy to-gray-600 overflow-hidden">
+                        <div class="relative z-10 p-6 h-full flex flex-col justify-between text-white">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="text-xs uppercase tracking-wider text-blue-200">BUSINESS CARD</div>
+                                    <div class="text-xs text-blue-300">示例卡片 · 2025</div>
+                                </div>
+                                <div class="bg-white/10 backdrop-blur-sm px-3 py-1 rounded-full text-xs">标签2</div>
+                            </div>
+                            <div>
+                                <h1 class="text-xl font-serif leading-tight mb-3">业务卡片 2</h1>
+                                <p class="text-sm text-blue-200 mb-4">这是第二张卡片的描述</p>
+                                <div class="flex items-center space-x-4 text-xs text-blue-300">
+                                    <span>示例内容 2025-01-20</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6 space-y-6">
+                        <div class="text-center">
+                            <p class="text-gray-600">这里是卡片内容区域</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 卡片3 - Navy主题 -->
+        <div class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden" style="width: 375px; height: 812px; margin: 0 auto;">
+                <div class="relative h-full">
+                    <div class="relative h-64 bg-gradient-to-br from-navy via-blue-800 to-gray-700 overflow-hidden">
+                        <div class="relative z-10 p-6 h-full flex flex-col justify-between text-white">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="text-xs uppercase tracking-wider text-blue-200">BUSINESS CARD</div>
+                                    <div class="text-xs text-blue-300">示例卡片 · 2025</div>
+                                </div>
+                                <div class="bg-white/10 backdrop-blur-sm px-3 py-1 rounded-full text-xs">标签3</div>
+                            </div>
+                            <div>
+                                <h1 class="text-xl font-serif leading-tight mb-3">业务卡片 3</h1>
+                                <p class="text-sm text-blue-200 mb-4">这是第三张卡片的描述</p>
+                                <div class="flex items-center space-x-4 text-xs text-blue-300">
+                                    <span>示例内容 2025-01-20</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6 space-y-6">
+                        <div class="text-center">
+                            <p class="text-gray-600">这里是卡片内容区域</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </body>

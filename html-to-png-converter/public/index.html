@@ -255,9 +255,14 @@
                     </div>
                 </div>
 
-                <button type="submit" class="convert-btn" id="convertBtn">
-                    🚀 开始转换
-                </button>
+                <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                    <button type="submit" class="convert-btn" id="convertBtn">
+                        🚀 开始转换
+                    </button>
+                    <button type="button" class="convert-btn" id="splitCardsBtn" style="background: #ff6b6b;">
+                        🃏 分割卡片
+                    </button>
+                </div>
             </form>
 
             <div class="loading" id="loading">
@@ -274,12 +279,20 @@
                 <a href="#" class="download-btn" id="downloadBtn" download="converted.png">📥 下载图片</a>
             </div>
 
+            <div class="result" id="cardResult">
+                <h3>🃏 卡片分割完成</h3>
+                <div id="cardInfo"></div>
+                <br>
+                <a href="#" class="download-btn" id="downloadCardsBtn" download="cards.zip">📥 下载所有卡片 (ZIP)</a>
+            </div>
+
             <div class="examples">
                 <h3>💡 示例HTML代码</h3>
                 <p>点击下面的按钮快速加载示例:</p>
                 <button type="button" class="example-btn" onclick="loadExample('card')">商务卡片</button>
                 <button type="button" class="example-btn" onclick="loadExample('chart')">数据图表</button>
                 <button type="button" class="example-btn" onclick="loadExample('banner')">横幅广告</button>
+                <button type="button" class="example-btn" onclick="loadExample('multiCard')" style="background: #ff6b6b;">多卡片模板</button>
             </div>
         </div>
     </div>
