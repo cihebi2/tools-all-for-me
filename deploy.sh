@@ -350,14 +350,36 @@ async function convertHTMLToPNG(browser, htmlContent, options = {}) {
             deviceScaleFactor: scale
         });
 
-        // 添加中文字体CSS
+        // 添加中文字体CSS和Font Awesome图标支持
         const fontCSS = `
         <style>
+        @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+        @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css');
+        
         * {
             font-family: "Noto Sans CJK SC", "WenQuanYi Zen Hei", "Microsoft YaHei", "微软雅黑", "SimHei", "黑体", Arial, sans-serif !important;
         }
         body {
             font-family: "Noto Sans CJK SC", "WenQuanYi Zen Hei", "Microsoft YaHei", "微软雅黑", "SimHei", "黑体", Arial, sans-serif !important;
+        }
+        
+        /* Font Awesome 图标字体声明 */
+        .fa, .fas, .far, .fal, .fad, .fab {
+            font-family: "Font Awesome 6 Free", "Font Awesome 6 Pro", "Font Awesome 5 Free", "Font Awesome 5 Pro", "FontAwesome" !important;
+            font-weight: 900;
+            font-style: normal;
+            font-variant: normal;
+            text-rendering: auto;
+            line-height: 1;
+        }
+        
+        .far {
+            font-weight: 400;
+        }
+        
+        .fab {
+            font-family: "Font Awesome 6 Brands", "Font Awesome 5 Brands" !important;
+            font-weight: 400;
         }
         </style>
         `;
@@ -386,6 +408,16 @@ async function convertHTMLToPNG(browser, htmlContent, options = {}) {
             });
         });
 
+        // 等待Font Awesome图标字体加载完成
+        await page.waitForFunction(() => {
+            return document.fonts.status === 'loaded';
+        }, { timeout: 10000 }).catch(() => {
+            console.log('字体加载超时，继续执行');
+        });
+
+        // 额外等待时间确保图标渲染
+        await page.waitForTimeout(2000);
+
         const screenshotOptions = {
             fullPage: fullPage,
             omitBackground: transparent,
@@ -400,8 +432,6 @@ async function convertHTMLToPNG(browser, htmlContent, options = {}) {
                 height: Math.floor(height)
             };
         }
-
-        await page.waitForTimeout(1000);
         const buffer = await page.screenshot(screenshotOptions);
         
         return buffer;
@@ -430,11 +460,33 @@ async function splitIntoCards(browser, htmlContent, options = {}) {
 
         const fontCSS = `
         <style>
+        @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+        @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css');
+        
         * {
             font-family: "Noto Sans CJK SC", "WenQuanYi Zen Hei", "Microsoft YaHei", "微软雅黑", "SimHei", "黑体", Arial, sans-serif !important;
         }
         body {
             font-family: "Noto Sans CJK SC", "WenQuanYi Zen Hei", "Microsoft YaHei", "微软雅黑", "SimHei", "黑体", Arial, sans-serif !important;
+        }
+        
+        /* Font Awesome 图标字体声明 */
+        .fa, .fas, .far, .fal, .fad, .fab {
+            font-family: "Font Awesome 6 Free", "Font Awesome 6 Pro", "Font Awesome 5 Free", "Font Awesome 5 Pro", "FontAwesome" !important;
+            font-weight: 900;
+            font-style: normal;
+            font-variant: normal;
+            text-rendering: auto;
+            line-height: 1;
+        }
+        
+        .far {
+            font-weight: 400;
+        }
+        
+        .fab {
+            font-family: "Font Awesome 6 Brands", "Font Awesome 5 Brands" !important;
+            font-weight: 400;
         }
         </style>
         `;
@@ -457,7 +509,15 @@ async function splitIntoCards(browser, htmlContent, options = {}) {
             timeout: 30000
         });
 
-        await page.waitForTimeout(1000);
+        // 等待Font Awesome图标字体加载完成
+        await page.waitForFunction(() => {
+            return document.fonts.status === 'loaded';
+        }, { timeout: 10000 }).catch(() => {
+            console.log('字体加载超时，继续执行');
+        });
+
+        // 额外等待时间确保图标渲染
+        await page.waitForTimeout(2000);
 
         const cardElements = await page.$$('div[style*="width"], div[style*="height"], .card, [class*="card"]');
         
