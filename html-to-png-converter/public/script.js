@@ -1,6 +1,9 @@
 // HTML转PNG转换工具前端脚本
+console.log('Script.js 加载成功');
 
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM 加载完成');
+    
     const form = document.getElementById('convertForm');
     const convertBtn = document.getElementById('convertBtn');
     const splitCardsBtn = document.getElementById('splitCardsBtn');
@@ -16,38 +19,53 @@ document.addEventListener('DOMContentLoaded', function() {
     // 表单提交处理
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
-        
-        const htmlContent = document.getElementById('htmlContent').value.trim();
-        if (!htmlContent) {
-            showError('请输入HTML内容');
-            return;
-        }
+        console.log('表单提交事件触发');
+        await convertHtmlToPng(false);
+    });
 
-        const options = {
-            html: htmlContent,
-            width: parseInt(document.getElementById('width').value),
-            height: parseInt(document.getElementById('height').value),
-            scale: parseFloat(document.getElementById('scale').value),
-            fullPage: document.getElementById('fullPage').checked,
-            transparent: document.getElementById('transparent').checked
-        };
-
-        await convertHtmlToPng(options);
+    // 普通转换按钮
+    convertBtn.addEventListener('click', async function(e) {
+        e.preventDefault();
+        console.log('转换按钮点击');
+        await convertHtmlToPng(false);
     });
 
     // 卡片分割按钮处理
-    splitCardsBtn.addEventListener('click', async function() {
-        const htmlContent = document.getElementById('htmlContent').value.trim();
-        if (!htmlContent) {
+    splitCardsBtn.addEventListener('click', async function(e) {
+        e.preventDefault();
+        console.log('分割卡片按钮点击');
+        await convertHtmlToPng(true);
+    });
+
+    async function convertHtmlToPng(splitCards = false) {
+        console.log('开始转换, splitCards:', splitCards);
+        
+        const htmlContentElement = document.getElementById('htmlContent');
+        if (!htmlContentElement) {
+            console.error('未找到htmlContent元素');
+            showError('页面元素错误');
+            return;
+        }
+
+        const htmlContentValue = htmlContentElement.value.trim();
+        console.log('HTML内容长度:', htmlContentValue.length);
+        
+        if (!htmlContentValue) {
             showError('请输入HTML内容');
             return;
         }
 
-        const options = {
-            html: htmlContent,
-            width: parseInt(document.getElementById('width').value),
-            height: parseInt(document.getElementById('height').value),
-            scale: parseFloat(document.getElementById('scale').value),
+        const formData = {
+            htmlContent: htmlContentValue,
+            width: parseInt(document.getElementById('width')?.value) || 1920,
+            height: parseInt(document.getElementById('height')?.value) || 1080,
+            scale: parseFloat(document.getElementById('scale')?.value) || 2,
+            fullPage: document.getElementById('fullPage')?.checked || true,
+            transparent: document.getElementById('transparent')?.checked || false,
+            splitCards
+        };
+
+        console.log('发送数据:', formData);
             outputFormat: 'zip'
         };
 
