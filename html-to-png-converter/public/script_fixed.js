@@ -19,29 +19,37 @@ document.addEventListener('DOMContentLoaded', function() {
     // 表单提交处理
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
+        console.log('表单提交事件触发');
         await performConversion(false);
     });
 
     // 普通转换按钮
     convertBtn.addEventListener('click', async function(e) {
         e.preventDefault();
+        console.log('转换按钮点击');
         await performConversion(false);
     });
 
     // 卡片分割按钮处理
     splitCardsBtn.addEventListener('click', async function(e) {
         e.preventDefault();
+        console.log('分割卡片按钮点击');
         await performConversion(true);
     });
 
     async function performConversion(splitCards = false) {
+        console.log('开始转换, splitCards:', splitCards);
+        
         const htmlContentElement = document.getElementById('htmlContent');
         if (!htmlContentElement) {
+            console.error('未找到htmlContent元素');
             showError('页面元素错误');
             return;
         }
 
         const htmlContentValue = htmlContentElement.value.trim();
+        console.log('HTML内容长度:', htmlContentValue.length);
+        
         if (!htmlContentValue) {
             showError('请输入HTML内容');
             return;
@@ -60,18 +68,25 @@ document.addEventListener('DOMContentLoaded', function() {
             formData.append('mode', 'cards');
         }
 
+        console.log('准备发送请求');
+        
         try {
             if (splitCards) {
                 showCardLoading();
+                hideError();
+                hideCardResult();
             } else {
                 showLoading();
+                hideError();
+                hideResult();
             }
-            hideError();
 
             const response = await fetch('/api/convert', {
                 method: 'POST',
                 body: formData
             });
+
+            console.log('收到响应，状态:', response.status);
 
             if (!response.ok) {
                 let errorMessage = `请求失败 (${response.status})`;
@@ -79,12 +94,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     const errorData = await response.json();
                     errorMessage = errorData.error || errorMessage;
                 } catch (e) {
+                    // 如果响应不是JSON，使用状态文本
                     errorMessage = response.statusText || errorMessage;
                 }
                 throw new Error(errorMessage);
             }
 
             const blob = await response.blob();
+            console.log('收到blob，大小:', blob.size);
             
             if (splitCards) {
                 // 处理卡片分割结果
@@ -94,6 +111,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 cardInfo.innerHTML = '成功分割卡片！<br>📦 ZIP文件已准备就绪';
                 showCardResult();
+                console.log('卡片分割完成');
             } else {
                 // 处理普通转换结果
                 const imageUrl = URL.createObjectURL(blob);
@@ -102,6 +120,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 downloadBtn.download = 'screenshot.png';
                 
                 showResult();
+                console.log('转换完成');
             }
             
         } catch (err) {
@@ -129,20 +148,6 @@ document.addEventListener('DOMContentLoaded', function() {
         convertBtn.textContent = '🚀 开始转换';
     }
 
-    function showCardLoading() {
-        loading.style.display = 'block';
-        splitCardsBtn.disabled = true;
-        splitCardsBtn.textContent = '分割中...';
-        convertBtn.disabled = true;
-    }
-
-    function hideCardLoading() {
-        loading.style.display = 'none';
-        splitCardsBtn.disabled = false;
-        splitCardsBtn.textContent = '🃏 分割卡片';
-        convertBtn.disabled = false;
-    }
-
     function showError(message) {
         error.textContent = message;
         error.style.display = 'block';
@@ -158,6 +163,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function hideResult() {
         result.style.display = 'none';
+    }
+
+    // 卡片分割状态函数
+    function showCardLoading() {
+        loading.style.display = 'block';
+        splitCardsBtn.disabled = true;
+        splitCardsBtn.textContent = '分割中...';
+        convertBtn.disabled = true;
+    }
+
+    function hideCardLoading() {
+        loading.style.display = 'none';
+        splitCardsBtn.disabled = false;
+        splitCardsBtn.textContent = '🃏 分割卡片';
+        convertBtn.disabled = false;
     }
 
     function showCardResult() {
@@ -229,6 +249,14 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('htmlContent').value = examples[type];
         }
     };
+
+    // 键盘快捷键
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.key === 'Enter') {
+            e.preventDefault();
+            form.dispatchEvent(new Event('submit'));
+        }
+    });
 
     // 自动保存HTML内容到localStorage
     const htmlTextarea = document.getElementById('htmlContent');
