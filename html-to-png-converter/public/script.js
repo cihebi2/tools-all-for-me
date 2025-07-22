@@ -65,12 +65,88 @@ document.addEventListener('DOMContentLoaded', function() {
             splitCards
         };
 
-        console.log('发送数据:', formData);
-            outputFormat: 'zip'
-        };
+                 console.log('发送数据:', formData);
+         
+         if (splitCards) {
+             await splitCards(formData);
+         } else {
+             await performNormalConvert(formData);
+         }
+     }
 
-        await splitCards(options);
-    });
+     // 普通转换函数
+     async function performNormalConvert(formData) {
+         const options = {
+             html: formData.htmlContent,
+             width: formData.width,
+             height: formData.height,
+             scale: formData.scale,
+             fullPage: formData.fullPage,
+             transparent: formData.transparent
+         };
+
+         await convertHtmlToPng(options);
+     }
+
+     // 卡片分割转换函数
+     async function splitCards(formData) {
+         const options = {
+             html: formData.htmlContent,
+             width: formData.width,
+             height: formData.height,
+             scale: formData.scale,
+             outputFormat: 'zip'
+         };
+
+         try {
+             showCardLoading();
+             hideError();
+             hideCardResult();
+
+             const response = await fetch('/api/split-cards', {
+                 method: 'POST',
+                 headers: {
+                     'Content-Type': 'application/json',
+                 },
+                 body: JSON.stringify(options)
+             });
+
+             if (!response.ok) {
+                 const errorData = await response.json();
+                 throw new Error(errorData.error || '卡片分割失败');
+             }
+
+             const blob = await response.blob();
+             const downloadUrl = URL.createObjectURL(blob);
+             
+             // 设置下载链接
+             downloadCardsBtn.href = downloadUrl;
+             
+             // 获取卡片数量和处理时间
+             const cardsCount = response.headers.get('X-Cards-Count');
+             const processingTime = response.headers.get('X-Processing-Time');
+             
+             // 显示分割信息
+             let infoText = '成功分割卡片！';
+             if (cardsCount) {
+                 infoText += `<br>📊 共生成 ${cardsCount} 张卡片图片`;
+             }
+             if (processingTime) {
+                 infoText += `<br>⏱️ 处理时间: ${processingTime}ms`;
+             }
+             
+             cardInfo.innerHTML = infoText;
+             showCardResult();
+             
+             console.log(`卡片分割完成，生成 ${cardsCount} 张图片，耗时: ${processingTime}ms`);
+             
+         } catch (err) {
+             console.error('卡片分割错误:', err);
+             showError(err.message);
+         } finally {
+             hideCardLoading();
+         }
+           }
 
     // 转换函数
     async function convertHtmlToPng(options) {
