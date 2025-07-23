@@ -202,8 +202,7 @@ async function convertHTMLToPNG(browser, htmlContent, options = {}) {
         const screenshotOptions = {
             fullPage: fullPage,
             omitBackground: transparent,
-            type: 'png',
-            quality: 100 // 最高质量
+            type: 'png'
         };
 
         if (!fullPage) {
@@ -326,8 +325,7 @@ async function splitIntoCards(browser, htmlContent, options = {}) {
                 if (boundingBox && boundingBox.width > 50 && boundingBox.height > 50) {
                     const buffer = await element.screenshot({
                         omitBackground: transparent,
-                        type: 'png',
-                        quality: 100
+                        type: 'png'
                     });
                     
                     cardBuffers.push(buffer);
