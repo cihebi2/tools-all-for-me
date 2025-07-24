@@ -42,6 +42,34 @@
         .header p {
             font-size: 1.1em;
             opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .nav-link {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            transition: background 0.3s, transform 0.3s;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .nav-link.active {
+            background: rgba(255,255,255,0.4);
         }
 
         .main-content {
@@ -210,6 +238,10 @@
         <div class="header">
             <h1>🎨 HTML转PNG转换工具</h1>
             <p>高清无损转换，支持自定义尺寸和缩放</p>
+            <div class="nav-links">
+                <a href="/" class="nav-link active">转换器</a>
+                <a href="/editor" class="nav-link">在线编辑器</a>
+            </div>
         </div>
 
         <div class="main-content">

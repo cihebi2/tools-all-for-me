@@ -30,6 +30,16 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// HTML编辑器页面
+app.get('/editor', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'editor.html'));
+});
+
+// 编辑器路由别名
+app.get('/edit', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'editor.html'));
+});
+
 // 增强的健康检查端点
 app.get('/api/health', async (req, res) => {
     try {
