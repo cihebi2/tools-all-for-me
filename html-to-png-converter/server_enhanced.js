@@ -25,8 +25,18 @@ const upload = multer({
     }
 });
 
-// 根路径重定向到主页
+// 根路径重定向到工具集合页面
 app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'tools.html'));
+});
+
+// 工具集合页面
+app.get('/tools', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'tools.html'));
+});
+
+// HTML转PNG转换器页面
+app.get('/converter', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
@@ -38,6 +48,11 @@ app.get('/editor', (req, res) => {
 // 编辑器路由别名
 app.get('/edit', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'editor.html'));
+});
+
+// 音频音量调整工具页面
+app.get('/audio', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'audio.html'));
 });
 
 // 增强的健康检查端点

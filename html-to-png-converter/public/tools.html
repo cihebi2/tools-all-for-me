@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工具集合 - 在线工具平台</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .main-content {
+            padding: 50px 40px;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .tool-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #4facfe, #00f2fe);
+        }
+
+        .tool-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            border-color: #4facfe;
+        }
+
+        .tool-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .tool-title {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .tool-description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            min-height: 48px;
+        }
+
+        .tool-features {
+            list-style: none;
+            margin-bottom: 25px;
+        }
+
+        .tool-features li {
+            color: #555;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .tool-features li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .tool-action {
+            display: flex;
+            gap: 10px;
+        }
+
+        .tool-btn {
+            flex: 1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .tool-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        .tool-btn.secondary {
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .tool-btn.secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .coming-soon {
+            opacity: 0.7;
+            position: relative;
+        }
+
+        .coming-soon::after {
+            content: '即将推出';
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #ffc107;
+            color: #333;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .coming-soon .tool-btn {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .section-title {
+            font-size: 2em;
+            color: #333;
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background: linear-gradient(90deg, #4facfe, #00f2fe);
+            border-radius: 2px;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #666;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .footer a {
+            color: #4facfe;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.2em;
+            }
+
+            .stats {
+                flex-wrap: wrap;
+                gap: 20px;
+            }
+
+            .tools-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .main-content {
+                padding: 30px 20px;
+            }
+
+            .tool-card {
+                padding: 20px;
+            }
+        }
+
+        /* 工具状态指示器 */
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-left: 8px;
+        }
+
+        .status-online {
+            background: #28a745;
+            box-shadow: 0 0 8px rgba(40, 167, 69, 0.4);
+        }
+
+        .status-beta {
+            background: #ffc107;
+            box-shadow: 0 0 8px rgba(255, 193, 7, 0.4);
+        }
+
+        .status-coming {
+            background: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-tools"></i> 在线工具平台</h1>
+            <p>高效便捷的在线工具集合，让工作更简单</p>
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-number">3</span>
+                    <span class="stat-label">可用工具</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">99.9%</span>
+                    <span class="stat-label">运行时间</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">24/7</span>
+                    <span class="stat-label">全天候服务</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <h2 class="section-title">🛠️ 工具集合</h2>
+            
+            <div class="tools-grid">
+                <!-- HTML转PNG转换器 -->
+                <div class="tool-card">
+                    <div class="tool-icon">
+                        <i class="fas fa-image"></i>
+                    </div>
+                    <h3 class="tool-title">
+                        HTML转PNG转换器
+                        <span class="status-indicator status-online"></span>
+                    </h3>
+                    <p class="tool-description">
+                        高清无损转换HTML代码为PNG图片，支持自定义尺寸、缩放和透明背景设置。
+                    </p>
+                    <ul class="tool-features">
+                        <li>支持外部资源加载</li>
+                        <li>中文字体完美渲染</li>
+                        <li>Font Awesome图标支持</li>
+                        <li>卡片分割功能</li>
+                    </ul>
+                    <div class="tool-action">
+                        <a href="/converter" class="tool-btn">
+                            <i class="fas fa-rocket"></i> 开始转换
+                        </a>
+                        <a href="#" class="tool-btn secondary">
+                            <i class="fas fa-info-circle"></i> 了解更多
+                        </a>
+                    </div>
+                </div>
+
+                <!-- HTML在线编辑器 -->
+                <div class="tool-card">
+                    <div class="tool-icon" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <h3 class="tool-title">
+                        HTML在线编辑器
+                        <span class="status-indicator status-online"></span>
+                    </h3>
+                    <p class="tool-description">
+                        Monaco Editor驱动的专业HTML编辑器，实时预览，丰富模板，一键转PNG。
+                    </p>
+                    <ul class="tool-features">
+                        <li>VS Code级别编辑体验</li>
+                        <li>实时预览和智能提示</li>
+                        <li>6种内置模板</li>
+                        <li>响应式设计</li>
+                    </ul>
+                    <div class="tool-action">
+                        <a href="/editor" class="tool-btn">
+                            <i class="fas fa-edit"></i> 在线编辑
+                        </a>
+                        <a href="#" class="tool-btn secondary">
+                            <i class="fas fa-eye"></i> 预览模板
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 音频音量调整工具 -->
+                <div class="tool-card">
+                    <div class="tool-icon" style="background: linear-gradient(135deg, #54a0ff 0%, #2e86de 100%);">
+                        <i class="fas fa-volume-up"></i>
+                    </div>
+                    <h3 class="tool-title">
+                        音频音量调整
+                        <span class="status-indicator status-beta"></span>
+                    </h3>
+                    <p class="tool-description">
+                        基于Web Audio API的在线音频处理工具，支持音量增益调整和多种音频格式。
+                    </p>
+                    <ul class="tool-features">
+                        <li>支持MP3、WAV、AAC格式</li>
+                        <li>实时音量预览</li>
+                        <li>无损增益调整</li>
+                        <li>客户端处理保护隐私</li>
+                    </ul>
+                    <div class="tool-action">
+                        <a href="/audio" class="tool-btn">
+                            <i class="fas fa-music"></i> 调整音量
+                        </a>
+                        <a href="#" class="tool-btn secondary">
+                            <i class="fas fa-headphones"></i> 音频预览
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 更多工具预告 -->
+                <div class="tool-card coming-soon">
+                    <div class="tool-icon" style="background: linear-gradient(135deg, #5f27cd 0%, #341f97 100%);">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                    <h3 class="tool-title">
+                        PDF处理工具
+                        <span class="status-indicator status-coming"></span>
+                    </h3>
+                    <p class="tool-description">
+                        PDF转换、合并、分割、压缩等全方位PDF处理功能。
+                    </p>
+                    <ul class="tool-features">
+                        <li>PDF转图片/Word</li>
+                        <li>多文件合并分割</li>
+                        <li>智能压缩优化</li>
+                        <li>水印和签名添加</li>
+                    </ul>
+                    <div class="tool-action">
+                        <a href="#" class="tool-btn">
+                            <i class="fas fa-clock"></i> 即将推出
+                        </a>
+                    </div>
+                </div>
+
+                <div class="tool-card coming-soon">
+                    <div class="tool-icon" style="background: linear-gradient(135deg, #00d2d3 0%, #54a0ff 100%);">
+                        <i class="fas fa-compress-alt"></i>
+                    </div>
+                    <h3 class="tool-title">
+                        图片压缩工具
+                        <span class="status-indicator status-coming"></span>
+                    </h3>
+                    <p class="tool-description">
+                        智能图片压缩，支持多种格式，保持高质量的同时大幅减小文件大小。
+                    </p>
+                    <ul class="tool-features">
+                        <li>AI智能压缩算法</li>
+                        <li>批量处理支持</li>
+                        <li>格式转换</li>
+                        <li>EXIF数据清理</li>
+                    </ul>
+                    <div class="tool-action">
+                        <a href="#" class="tool-btn">
+                            <i class="fas fa-clock"></i> 即将推出
+                        </a>
+                    </div>
+                </div>
+
+                <div class="tool-card coming-soon">
+                    <div class="tool-icon" style="background: linear-gradient(135deg, #ff9ff3 0%, #f368e0 100%);">
+                        <i class="fas fa-qrcode"></i>
+                    </div>
+                    <h3 class="tool-title">
+                        二维码生成器
+                        <span class="status-indicator status-coming"></span>
+                    </h3>
+                    <p class="tool-description">
+                        专业的二维码生成工具，支持多种类型内容，自定义样式和Logo。
+                    </p>
+                    <ul class="tool-features">
+                        <li>多种内容类型支持</li>
+                        <li>自定义颜色和样式</li>
+                        <li>Logo嵌入功能</li>
+                        <li>高清矢量输出</li>
+                    </ul>
+                    <div class="tool-action">
+                        <a href="#" class="tool-btn">
+                            <i class="fas fa-clock"></i> 即将推出
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>
+                © 2025 在线工具平台 | 
+                <a href="https://github.com/cihebi2/tools-all-for-me">GitHub</a> | 
+                <a href="mailto:support@tool.cihebi.vip">联系我们</a>
+            </p>
+            <p style="margin-top: 10px; font-size: 0.9em;">
+                所有工具均为开源项目，欢迎贡献代码和建议 ❤️
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // 添加页面交互动画
+        document.addEventListener('DOMContentLoaded', function() {
+            // 工具卡片动画
+            const toolCards = document.querySelectorAll('.tool-card');
+            toolCards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(30px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.6s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+
+            // 统计数字动画
+            const statNumbers = document.querySelectorAll('.stat-number');
+            statNumbers.forEach(stat => {
+                const text = stat.textContent;
+                if (!isNaN(parseFloat(text))) {
+                    const target = parseFloat(text);
+                    let current = 0;
+                    const increment = target / 30;
+                    const timer = setInterval(() => {
+                        current += increment;
+                        if (current >= target) {
+                            current = target;
+                            clearInterval(timer);
+                        }
+                        stat.textContent = text.includes('%') ? 
+                            current.toFixed(1) + '%' : 
+                            Math.floor(current);
+                    }, 50);
+                }
+            });
+        });
+
+        // 阻止即将推出的工具链接点击
+        document.querySelectorAll('.coming-soon .tool-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                alert('该工具正在开发中，敬请期待！');
+            });
+        });
+    </script>
+</body>
+</html>
