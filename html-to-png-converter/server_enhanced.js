@@ -55,6 +55,11 @@ app.get('/audio', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'audio.html'));
 });
 
+// 测试页面路由
+app.get('/test-convert', (req, res) => {
+    res.sendFile(path.join(__dirname, 'test_convert_api.html'));
+});
+
 // 增强的健康检查端点
 app.get('/api/health', async (req, res) => {
     try {

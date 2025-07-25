@@ -412,16 +412,24 @@ class AudioVolumeAdjuster {
         // 获取原文件扩展名
         const originalType = originalMimeType.toLowerCase();
         
+        console.log('开始编码音频，原格式:', originalType);
+        
         try {
             // 对于支持的原生格式，尝试使用MediaRecorder
             if (this.isSupportedForMediaRecorder(originalType)) {
-                return await this.encodeWithMediaRecorder(buffer, originalType);
+                console.log('尝试使用MediaRecorder保持原格式');
+                const result = await this.encodeWithMediaRecorder(buffer, originalType);
+                console.log('MediaRecorder编码成功');
+                return result;
+            } else {
+                console.log('原格式不支持MediaRecorder，直接使用WAV');
             }
         } catch (error) {
             console.warn('MediaRecorder编码失败，降级到WAV:', error);
         }
 
         // 降级到WAV格式
+        console.log('使用WAV格式编码');
         return await this.audioBufferToWav(buffer);
     }
 
@@ -446,58 +454,104 @@ class AudioVolumeAdjuster {
     // 使用MediaRecorder编码（保持接近原格式）
     async encodeWithMediaRecorder(buffer, originalType) {
         return new Promise((resolve, reject) => {
-            // 创建音频源
-            const context = new AudioContext();
-            const source = context.createBufferSource();
-            const destination = context.createMediaStreamDestination();
-            
-            source.buffer = buffer;
-            source.connect(destination);
+            try {
+                // 创建音频源
+                const context = new AudioContext();
+                const source = context.createBufferSource();
+                const destination = context.createMediaStreamDestination();
+                
+                source.buffer = buffer;
+                source.connect(destination);
 
-            // 选择合适的编码格式
-            let mimeType = 'audio/webm;codecs=opus';
-            if (originalType.includes('ogg')) {
-                mimeType = 'audio/ogg;codecs=opus';
-            } else if (originalType.includes('mp4')) {
-                mimeType = 'audio/mp4';
-            }
-
-            // 确保格式被支持
-            if (!MediaRecorder.isTypeSupported(mimeType)) {
-                mimeType = 'audio/webm;codecs=opus';
-            }
-
-            const mediaRecorder = new MediaRecorder(destination.stream, {
-                mimeType: mimeType,
-                audioBitsPerSecond: 128000
-            });
-
-            const chunks = [];
-            
-            mediaRecorder.ondataavailable = (event) => {
-                if (event.data.size > 0) {
-                    chunks.push(event.data);
+                // 选择合适的编码格式
+                let mimeType = 'audio/webm;codecs=opus';
+                if (originalType.includes('ogg')) {
+                    mimeType = 'audio/ogg;codecs=opus';
+                } else if (originalType.includes('mp4')) {
+                    mimeType = 'audio/mp4';
                 }
-            };
 
-            mediaRecorder.onstop = () => {
-                const blob = new Blob(chunks, { type: mimeType });
-                resolve(blob);
-            };
+                // 确保格式被支持
+                if (!MediaRecorder.isTypeSupported(mimeType)) {
+                    mimeType = 'audio/webm;codecs=opus';
+                }
 
-            mediaRecorder.onerror = (error) => {
+                console.log('使用MediaRecorder编码，格式:', mimeType);
+
+                const mediaRecorder = new MediaRecorder(destination.stream, {
+                    mimeType: mimeType,
+                    audioBitsPerSecond: 128000
+                });
+
+                const chunks = [];
+                let isResolved = false;
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    console.log('MediaRecorder数据可用，大小:', event.data.size);
+                    if (event.data.size > 0) {
+                        chunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.onstop = () => {
+                    console.log('MediaRecorder停止，chunks数量:', chunks.length);
+                    if (!isResolved) {
+                        isResolved = true;
+                        const blob = new Blob(chunks, { type: mimeType });
+                        context.close().then(() => {
+                            console.log('AudioContext已关闭，编码完成，blob大小:', blob.size);
+                            resolve(blob);
+                        }).catch(() => {
+                            // 即使关闭失败也要resolve
+                            resolve(blob);
+                        });
+                    }
+                };
+
+                mediaRecorder.onerror = (error) => {
+                    console.error('MediaRecorder错误:', error);
+                    if (!isResolved) {
+                        isResolved = true;
+                        context.close().catch(() => {});
+                        reject(error);
+                    }
+                };
+
+                // 音频时长（秒）
+                const duration = buffer.length / buffer.sampleRate;
+                console.log('音频时长:', duration, '秒');
+
+                // 开始录制
+                mediaRecorder.start();
+                source.start();
+
+                // 添加超时保护，最长等待30秒
+                const maxTimeout = Math.max(duration * 1000 + 500, 30000);
+                const timeoutId = setTimeout(() => {
+                    console.log('MediaRecorder超时，强制停止');
+                    if (mediaRecorder.state === 'recording') {
+                        mediaRecorder.stop();
+                    }
+                    if (!isResolved) {
+                        isResolved = true;
+                        context.close().catch(() => {});
+                        reject(new Error('录制超时'));
+                    }
+                }, maxTimeout);
+
+                // 在音频播放完成后停止录制
+                setTimeout(() => {
+                    if (mediaRecorder.state === 'recording') {
+                        console.log('正常停止MediaRecorder');
+                        mediaRecorder.stop();
+                    }
+                    clearTimeout(timeoutId);
+                }, duration * 1000 + 200);
+
+            } catch (error) {
+                console.error('MediaRecorder初始化失败:', error);
                 reject(error);
-            };
-
-            // 开始录制
-            mediaRecorder.start();
-            source.start();
-
-            // 在音频播放完成后停止录制
-            setTimeout(() => {
-                mediaRecorder.stop();
-                context.close();
-            }, (buffer.length / buffer.sampleRate) * 1000 + 100);
+            }
         });
     }
 
