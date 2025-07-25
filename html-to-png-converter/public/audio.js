@@ -329,54 +329,82 @@ class AudioVolumeAdjuster {
         try {
             // 模拟处理进度
             await this.simulateProgress();
+            console.log('进度模拟完成，开始音频处理');
+
+            // 添加处理超时保护
+            const processTimeout = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('音频处理超时')), 30000);
+            });
 
             // 处理音频 - 保持原格式
-            this.processedBlob = await this.processAudioWithOriginalFormat();
+            this.processedBlob = await Promise.race([
+                this.processAudioWithOriginalFormat(),
+                processTimeout
+            ]);
+
+            console.log('音频处理完成，blob大小:', this.processedBlob.size);
 
             // 显示下载选项
             this.showDownloadOptions();
 
         } catch (error) {
             console.error('音频处理失败:', error);
-            this.showError('音频处理失败，请重试');
+            this.showError(`音频处理失败：${error.message}`);
             this.processBtn.disabled = false;
+            this.progressContainer.classList.remove('show');
         }
     }
 
     // 新的音频处理方法 - 保持原格式
     async processAudioWithOriginalFormat() {
+        console.log('开始音频处理');
         const volume = parseInt(this.volumeSlider.value);
         const gainValue = volume / 100;
 
+        console.log('音量设置:', volume + '%', '增益值:', gainValue);
+
         // 如果音量是100%，直接返回原文件
         if (gainValue === 1.0) {
+            console.log('音量100%，直接返回原文件');
             return this.currentFile;
         }
 
-        // 创建一个新的AudioContext用于离线处理
-        const offlineContext = new OfflineAudioContext(
-            this.audioBuffer.numberOfChannels,
-            this.audioBuffer.length,
-            this.audioBuffer.sampleRate
-        );
+        try {
+            console.log('创建离线音频上下文');
+            // 创建一个新的AudioContext用于离线处理
+            const offlineContext = new OfflineAudioContext(
+                this.audioBuffer.numberOfChannels,
+                this.audioBuffer.length,
+                this.audioBuffer.sampleRate
+            );
 
-        // 创建音频源和增益节点
-        const source = offlineContext.createBufferSource();
-        const gainNode = offlineContext.createGain();
+            console.log('设置音频源和增益节点');
+            // 创建音频源和增益节点
+            const source = offlineContext.createBufferSource();
+            const gainNode = offlineContext.createGain();
 
-        source.buffer = this.audioBuffer;
-        gainNode.gain.setValueAtTime(gainValue, offlineContext.currentTime);
+            source.buffer = this.audioBuffer;
+            gainNode.gain.setValueAtTime(gainValue, offlineContext.currentTime);
 
-        // 连接音频节点
-        source.connect(gainNode);
-        gainNode.connect(offlineContext.destination);
+            // 连接音频节点
+            source.connect(gainNode);
+            gainNode.connect(offlineContext.destination);
 
-        // 开始离线渲染
-        source.start();
-        const renderedBuffer = await offlineContext.startRendering();
+            console.log('开始离线渲染');
+            // 开始离线渲染
+            source.start();
+            const renderedBuffer = await offlineContext.startRendering();
+            
+            console.log('离线渲染完成，开始编码');
 
-        // 根据原文件格式进行编码
-        return await this.encodeAudioBuffer(renderedBuffer, this.currentFile.type);
+            // 临时简化：直接使用WAV格式避免MediaRecorder问题
+            console.log('使用WAV格式编码（临时简化版本）');
+            return await this.audioBufferToWav(renderedBuffer);
+
+        } catch (error) {
+            console.error('音频处理过程中出错:', error);
+            throw error;
+        }
     }
 
     async applyVolumeGain() {
