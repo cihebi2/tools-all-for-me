@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音频格式保持功能测试</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 30px;
+        }
+        .feature-item {
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #e7f3ff;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        .feature-title {
+            font-weight: 600;
+            color: #0056b3;
+            margin-bottom: 5px;
+        }
+        .feature-desc {
+            color: #333;
+            font-size: 14px;
+        }
+        .test-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .test-instructions {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #c3e6cb;
+        }
+        .format-support {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .format-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            text-align: center;
+        }
+        .format-card.supported {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+        .format-card.fallback {
+            border-color: #ffc107;
+            background: #fff3cd;
+        }
+        .format-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .format-status {
+            font-size: 12px;
+            color: #666;
+        }
+        .access-link {
+            display: inline-block;
+            background: linear-gradient(135deg, #54a0ff 0%, #2e86de 100%);
+            color: white;
+            text-decoration: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            margin: 20px 0;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .access-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(84, 160, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 音频格式保持功能测试</h1>
+        
+        <div class="test-instructions">
+            <h3>🔧 新功能说明</h3>
+            <p>音频工具已升级，现在支持<strong>智能格式保持</strong>，处理后的音频将尽可能保持原始格式，避免不必要的格式转换。</p>
+        </div>
+        
+        <ul class="feature-list">
+            <li class="feature-item">
+                <div class="feature-title">✅ 智能格式检测</div>
+                <div class="feature-desc">自动识别上传的音频格式（MP3、WAV、AAC、OGG等）</div>
+            </li>
+            
+            <li class="feature-item">
+                <div class="feature-title">🔄 原格式优先</div>
+                <div class="feature-desc">尽可能保持原音频格式，使用MediaRecorder API进行同格式编码</div>
+            </li>
+            
+            <li class="feature-item">
+                <div class="feature-title">📁 智能文件命名</div>
+                <div class="feature-desc">下载文件自动使用正确的扩展名，如 "music_volume_150%.mp3"</div>
+            </li>
+            
+            <li class="feature-item">
+                <div class="feature-title">⚡ 100%音量优化</div>
+                <div class="feature-desc">当音量设为100%时，直接返回原文件，零损失</div>
+            </li>
+            
+            <li class="feature-item">
+                <div class="feature-title">🛡️ 降级保护</div>
+                <div class="feature-desc">如果原格式编码失败，自动降级到高质量WAV格式</div>
+            </li>
+        </ul>
+
+        <div class="test-section">
+            <h3>📋 格式支持情况</h3>
+            <div class="format-support">
+                <div class="format-card supported">
+                    <div class="format-name">WebM/Opus</div>
+                    <div class="format-status">✅ 原生支持</div>
+                </div>
+                <div class="format-card supported">
+                    <div class="format-name">OGG/Opus</div>
+                    <div class="format-status">✅ 原生支持</div>
+                </div>
+                <div class="format-card supported">
+                    <div class="format-name">MP4/AAC</div>
+                    <div class="format-status">✅ 原生支持</div>
+                </div>
+                <div class="format-card fallback">
+                    <div class="format-name">MP3</div>
+                    <div class="format-status">⚠️ 降级到WAV</div>
+                </div>
+                <div class="format-card supported">
+                    <div class="format-name">WAV</div>
+                    <div class="format-status">✅ 高质量编码</div>
+                </div>
+                <div class="format-card fallback">
+                    <div class="format-name">FLAC</div>
+                    <div class="format-status">⚠️ 降级到WAV</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 测试步骤</h3>
+            <ol style="color: #333; line-height: 1.8;">
+                <li><strong>准备测试文件</strong>：准备不同格式的音频文件（MP3、WAV、OGG等）</li>
+                <li><strong>上传文件</strong>：在音频工具中上传测试文件</li>
+                <li><strong>调整音量</strong>：设置不同的音量值（如150%、200%）</li>
+                <li><strong>处理并下载</strong>：观察下载文件的格式和命名</li>
+                <li><strong>验证结果</strong>：检查输出文件是否保持了合适的格式</li>
+            </ol>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="http://localhost:3003/audio" class="access-link" target="_blank">
+                🎵 开始测试音频工具
+            </a>
+        </div>
+
+        <div style="margin-top: 30px; padding: 20px; background: #fff3cd; border-radius: 8px; border-left: 4px solid #ffc107;">
+            <h4 style="color: #856404; margin-bottom: 10px;">💡 注意事项</h4>
+            <ul style="color: #333; margin: 0;">
+                <li>MP3格式由于浏览器限制，可能会降级到WAV格式</li>
+                <li>WebM和OGG格式在现代浏览器中支持最好</li>
+                <li>WAV格式始终可以完美处理</li>
+                <li>所有格式都会应用防削波算法保护音质</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

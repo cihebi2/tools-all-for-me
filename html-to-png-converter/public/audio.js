@@ -330,11 +330,8 @@ class AudioVolumeAdjuster {
             // 模拟处理进度
             await this.simulateProgress();
 
-            // 处理音频
-            const processedBuffer = await this.applyVolumeGain();
-            
-            // 转换为Blob
-            this.processedBlob = await this.audioBufferToWav(processedBuffer);
+            // 处理音频 - 保持原格式
+            this.processedBlob = await this.processAudioWithOriginalFormat();
 
             // 显示下载选项
             this.showDownloadOptions();
@@ -344,6 +341,42 @@ class AudioVolumeAdjuster {
             this.showError('音频处理失败，请重试');
             this.processBtn.disabled = false;
         }
+    }
+
+    // 新的音频处理方法 - 保持原格式
+    async processAudioWithOriginalFormat() {
+        const volume = parseInt(this.volumeSlider.value);
+        const gainValue = volume / 100;
+
+        // 如果音量是100%，直接返回原文件
+        if (gainValue === 1.0) {
+            return this.currentFile;
+        }
+
+        // 创建一个新的AudioContext用于离线处理
+        const offlineContext = new OfflineAudioContext(
+            this.audioBuffer.numberOfChannels,
+            this.audioBuffer.length,
+            this.audioBuffer.sampleRate
+        );
+
+        // 创建音频源和增益节点
+        const source = offlineContext.createBufferSource();
+        const gainNode = offlineContext.createGain();
+
+        source.buffer = this.audioBuffer;
+        gainNode.gain.setValueAtTime(gainValue, offlineContext.currentTime);
+
+        // 连接音频节点
+        source.connect(gainNode);
+        gainNode.connect(offlineContext.destination);
+
+        // 开始离线渲染
+        source.start();
+        const renderedBuffer = await offlineContext.startRendering();
+
+        // 根据原文件格式进行编码
+        return await this.encodeAudioBuffer(renderedBuffer, this.currentFile.type);
     }
 
     async applyVolumeGain() {
@@ -372,6 +405,100 @@ class AudioVolumeAdjuster {
         }
 
         return processedBuffer;
+    }
+
+    // 根据原文件格式编码音频缓冲区
+    async encodeAudioBuffer(buffer, originalMimeType) {
+        // 获取原文件扩展名
+        const originalType = originalMimeType.toLowerCase();
+        
+        try {
+            // 对于支持的原生格式，尝试使用MediaRecorder
+            if (this.isSupportedForMediaRecorder(originalType)) {
+                return await this.encodeWithMediaRecorder(buffer, originalType);
+            }
+        } catch (error) {
+            console.warn('MediaRecorder编码失败，降级到WAV:', error);
+        }
+
+        // 降级到WAV格式
+        return await this.audioBufferToWav(buffer);
+    }
+
+    // 检查MediaRecorder是否支持该格式
+    isSupportedForMediaRecorder(mimeType) {
+        const supportedTypes = [
+            'audio/webm',
+            'audio/webm;codecs=opus',
+            'audio/ogg',
+            'audio/ogg;codecs=opus',
+            'audio/mp4',
+            'audio/mpeg'
+        ];
+        
+        return supportedTypes.some(type => 
+            MediaRecorder.isTypeSupported(type) && 
+            (mimeType.includes('webm') || mimeType.includes('ogg') || 
+             mimeType.includes('mp4') || mimeType.includes('mpeg'))
+        );
+    }
+
+    // 使用MediaRecorder编码（保持接近原格式）
+    async encodeWithMediaRecorder(buffer, originalType) {
+        return new Promise((resolve, reject) => {
+            // 创建音频源
+            const context = new AudioContext();
+            const source = context.createBufferSource();
+            const destination = context.createMediaStreamDestination();
+            
+            source.buffer = buffer;
+            source.connect(destination);
+
+            // 选择合适的编码格式
+            let mimeType = 'audio/webm;codecs=opus';
+            if (originalType.includes('ogg')) {
+                mimeType = 'audio/ogg;codecs=opus';
+            } else if (originalType.includes('mp4')) {
+                mimeType = 'audio/mp4';
+            }
+
+            // 确保格式被支持
+            if (!MediaRecorder.isTypeSupported(mimeType)) {
+                mimeType = 'audio/webm;codecs=opus';
+            }
+
+            const mediaRecorder = new MediaRecorder(destination.stream, {
+                mimeType: mimeType,
+                audioBitsPerSecond: 128000
+            });
+
+            const chunks = [];
+            
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    chunks.push(event.data);
+                }
+            };
+
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(chunks, { type: mimeType });
+                resolve(blob);
+            };
+
+            mediaRecorder.onerror = (error) => {
+                reject(error);
+            };
+
+            // 开始录制
+            mediaRecorder.start();
+            source.start();
+
+            // 在音频播放完成后停止录制
+            setTimeout(() => {
+                mediaRecorder.stop();
+                context.close();
+            }, (buffer.length / buffer.sampleRate) * 1000 + 100);
+        });
     }
 
     async audioBufferToWav(buffer) {
@@ -448,11 +575,24 @@ class AudioVolumeAdjuster {
         const url = URL.createObjectURL(this.processedBlob);
         this.downloadBtn.href = url;
         
-        // 生成文件名
+        // 生成文件名，保持原扩展名
         const originalName = this.currentFile.name;
-        const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
+        const lastDotIndex = originalName.lastIndexOf('.');
+        const nameWithoutExt = lastDotIndex > 0 ? originalName.substring(0, lastDotIndex) : originalName;
+        const originalExt = lastDotIndex > 0 ? originalName.substring(lastDotIndex) : '';
         const volume = this.volumeSlider.value;
-        this.downloadBtn.download = `${nameWithoutExt}_volume_${volume}%.wav`;
+        
+        // 根据处理后的blob类型确定扩展名
+        let fileExt = originalExt;
+        if (this.processedBlob.type.includes('wav')) {
+            fileExt = '.wav';
+        } else if (this.processedBlob.type.includes('webm')) {
+            fileExt = '.webm';
+        } else if (this.processedBlob.type.includes('ogg')) {
+            fileExt = '.ogg';
+        }
+        
+        this.downloadBtn.download = `${nameWithoutExt}_volume_${volume}%${fileExt}`;
     }
 
     // 时间显示更新
