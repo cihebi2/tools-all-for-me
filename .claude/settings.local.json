@@ -11,7 +11,11 @@
       "Bash(mkdir:*)",
       "Bash(ls:*)",
       "Bash(mv:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(node:*)",
+      "Bash(taskkill:*)",
+      "Bash(powershell:*)",
+      "Bash(rm:*)"
     ],
     "deny": []
   }

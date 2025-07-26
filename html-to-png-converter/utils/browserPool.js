@@ -97,18 +97,3 @@ class BrowserPool {
 }
 
 module.exports = { BrowserPool };
-
-m
-}  }
-.getStats();turn this   
-    re }
-    }
-     eak;
-    br
-     r.message); erro览器实例失败:',新浏or('创建ger.err
-        logror) {catch (er
-      } 补充池');o('创建新的浏览器实例logger.inf      ser);
-  .push(browhis.browsers
-        t;chOptions).laun.launch(this puppeteer = awaitt browser      cons try {
-  
-     ) {rowsers.maxBisth < thers.leng (this.brows
