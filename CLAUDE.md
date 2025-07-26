@@ -3,7 +3,7 @@
 ## 🌟 项目概述
 HTML转PNG转换器增强版，支持外部资源加载、中文字体渲染、Font Awesome图标等功能。已成功部署到云服务器并正常运行。
 
-**🆕 最新更新**: 新增HTML在线编辑器功能，支持实时预览和一键转PNG，大幅提升用户体验。
+**🆕 最新更新**: 新增音频工具MP3格式保持功能，支持MP3输入MP3输出，使用LAME.js编码器，文件大小限制提升至200MB。
 
 ## 📊 当前部署状态
 
@@ -29,6 +29,8 @@ HTML转PNG转换器增强版，支持外部资源加载、中文字体渲染、F
 │   ├── index.html              # 传统转换器界面
 │   ├── editor.html             # 🆕 HTML在线编辑器界面
 │   ├── editor.js               # 🆕 编辑器核心脚本
+│   ├── audio.html              # 🎵 音频处理界面
+│   ├── audio.js                # 🎵 音频处理脚本（MP3格式保持）
 │   ├── script.js               # 转换器脚本
 │   └── styles.css              # 样式文件
 ├── configs/                    # 配置文件模板
@@ -60,10 +62,22 @@ HTML转PNG转换器增强版，支持外部资源加载、中文字体渲染、F
 - ✅ **缩放控制**: 预览窗格支持50%-200%缩放
 - ✅ **全屏预览**: 隐藏编辑器专注预览效果
 
+#### 🎵 音频处理工具 (2025-07-26新增)
+- ✅ **MP3格式保持**: 上传MP3输出MP3，真正保持格式
+- ✅ **LAME.js编码器**: 使用业界标准MP3编码库，避免MediaRecorder超时问题
+- ✅ **200MB文件支持**: 文件大小限制从50MB提升至200MB
+- ✅ **智能降级机制**: 如果MP3编码失败自动降级到高质量WAV
+- ✅ **Web Audio API**: 客户端处理，保护用户隐私
+- ✅ **音量调整**: 支持0-300%的音量增益调整
+- ✅ **实时预览**: 可以预览调整后的音频效果
+- ✅ **进度显示**: 详细的处理状态和编码进度反馈
+- ✅ **多格式支持**: 支持MP3、WAV、AAC、OGG等格式上传
+
 ### 访问端点
 - **传统转换器**: `http://tool.cihebi.vip/` (主页)
 - **🆕 HTML编辑器**: `http://tool.cihebi.vip/editor` (在线编辑器)
 - **编辑器别名**: `http://tool.cihebi.vip/edit` (快速访问)
+- **🎵 音频处理**: `http://tool.cihebi.vip/audio` (音频音量调整)
 - **健康检查**: `http://tool.cihebi.vip/api/health`
 - **浏览器状态**: `http://tool.cihebi.vip/api/browsers/status`
 - **系统信息**: `http://tool.cihebi.vip/api/system/info`
@@ -100,33 +114,77 @@ HTML转PNG转换器增强版，支持外部资源加载、中文字体渲染、F
 **标准流程**: 已写入更新文档
 **状态**: ✅ 有标准解决流程
 
-## 🔄 标准更新流程
+### 5. 音频处理MediaRecorder超时问题 (已修复)
+**问题**: MP3文件处理时显示"音频处理失败：音频处理超时"
+**原因**: MediaRecorder在不同浏览器中对MP3编码兼容性问题
+**解决方案**: 
+- 使用LAME.js编码器直接编码MP3，避开MediaRecorder
+- 实现智能降级机制，如果MP3编码失败自动降级到WAV
+- 专用的MP3处理流程，确保100%成功率
+**修复时间**: 2025-07-26
+**状态**: ✅ 完全解决
 
-### 验证有效的更新方法
+## 🔄 云服务器更新流程
+
+### 🚀 标准更新方法（推荐）
+**适用于**: tool.cihebi.vip (144.34.227.86)  
+**PM2服务名**: html-to-png-converter  
+**注意**: 服务器不需要sudo命令
+
 ```bash
 # 1. 进入项目根目录
 cd /www/wwwroot/tools-all-for-me-main
 
-# 2. 删除可能的冲突文件
-sudo rm -f html-to-png-converter/update.sh
+# 2. 处理可能的Git冲突
+git stash push -m "保存本地更改 $(date)"
 
 # 3. 拉取最新代码
-sudo git pull origin main
+git pull origin main
 
 # 4. 进入项目目录
 cd html-to-png-converter
 
-# 5. 应用增强版文件
-sudo cp utils/converter_enhanced.js utils/converter.js
-sudo cp utils/browserPool_enhanced.js utils/browserPool.js
+# 5. 应用增强版文件（如果存在）
+cp utils/converter_enhanced.js utils/converter.js 2>/dev/null || true
+cp utils/browserPool_enhanced.js utils/browserPool.js 2>/dev/null || true
 
-# 6. 重启服务
+# 6. 重启PM2服务
 pm2 restart html-to-png-converter
 
 # 7. 验证更新成功
 pm2 status
 pm2 logs html-to-png-converter --lines 10
 curl http://localhost:3003/api/health
+```
+
+### 🔧 处理Git冲突的方法
+如果遇到git pull失败，使用以下方法：
+
+```bash
+# 方法1: 保存本地更改后拉取
+cd /www/wwwroot/tools-all-for-me-main
+git stash push -m "保存本地更改"
+git pull origin main
+cd html-to-png-converter
+cp utils/browserPool_enhanced.js utils/browserPool.js 2>/dev/null || true
+pm2 restart html-to-png-converter
+
+# 方法2: 强制重置（谨慎使用）
+git reset --hard origin/main
+```
+
+### 📱 快速更新脚本
+项目已包含自动化更新脚本：
+
+```bash
+# 使用完整更新脚本
+cd /www/wwwroot/tools-all-for-me-main/html-to-png-converter
+chmod +x update-server.sh
+./update-server.sh
+
+# 使用快速更新脚本
+chmod +x quick-update.sh
+./quick-update.sh
 ```
 
 ## 🛠️ 维护和监控
@@ -145,14 +203,20 @@ pm2 monit
 # 测试API功能
 curl http://localhost:3003/api/health
 curl http://localhost:3003/api/browsers/status
+curl http://localhost:3003/audio  # 测试音频页面
+
+# 测试音频处理功能
+curl http://tool.cihebi.vip/audio  # 外部访问测试
 ```
 
 ### 性能参数
-- **内存使用**: ~80MB（正常）
+- **内存使用**: ~80-200MB（音频处理时会临时增加）
 - **浏览器实例**: 3个
 - **最大内存限制**: 1GB
 - **超时设置**: 60秒
-- **文件上传限制**: 10MB
+- **文件上传限制**: 200MB（音频文件）
+- **音频支持格式**: MP3、WAV、AAC、OGG
+- **MP3编码器**: LAME.js (CDN加载)
 
 ## 🌐 Nginx配置
 
@@ -197,6 +261,19 @@ server {
 - [x] 快捷键操作响应
 - [x] 导航栏在两个页面间切换
 
+#### 🎵 音频处理功能 (2025-07-26新增)
+- [x] MP3文件上传和格式检测
+- [x] LAME.js编码器CDN加载
+- [x] 音量调整滑块（0-300%）
+- [x] 实时音频预览播放
+- [x] MP3格式保持编码
+- [x] 智能降级机制（MP3失败→WAV）
+- [x] 200MB大文件支持
+- [x] 进度显示和状态反馈
+- [x] 智能文件名生成
+- [x] 错误处理和用户提示
+- [x] 响应式移动端支持
+
 ### 用户提供的SVG测试文件
 **文件路径**: `c:\Users\ciheb\Desktop\runmi_work\进化岛\圆桌谈\svg.html`
 **测试结果**: ✅ 图标正常显示，外部资源正常加载
@@ -209,7 +286,9 @@ server {
 2. **内存过高**: 检查浏览器池状态，必要时重启
 3. **字体问题**: `fc-list :lang=zh` 检查中文字体
 4. **端口占用**: `netstat -tlnp | grep 3003`
-5. **Git更新失败**: 先删除冲突文件再拉取
+5. **Git更新失败**: 使用 `git stash push -m "保存更改"` 然后 `git pull origin main`
+6. **音频处理失败**: 检查LAME.js CDN加载，会自动降级到WAV
+7. **MP3编码问题**: 浏览器控制台查看详细错误信息
 
 ### 紧急恢复
 如果服务出现问题，可以快速回滚：
@@ -255,6 +334,16 @@ pm2 restart html-to-png-converter
 - [ ] 支持组件库拖拽（类似低代码平台）
 - [ ] 添加性能分析工具
 - [ ] 实现云端同步和分享功能
+
+#### 🎵 音频处理增强 (未来可选)
+- [ ] 添加更多音频效果（均衡器、压缩器、限制器）
+- [ ] 支持批量音频处理
+- [ ] 集成AI音频降噪功能
+- [ ] 添加音频格式转换（MP3↔WAV↔AAC等）
+- [ ] 实现音频剪辑和合并功能
+- [ ] 支持多轨音频处理
+- [ ] 添加频谱分析显示
+- [ ] 实现云端音频存储和分享
 
 ### 维护计划
 - **每周检查**: 服务状态和资源使用
