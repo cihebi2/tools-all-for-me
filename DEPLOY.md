@@ -1,4 +1,178 @@
-# 🚀 服务器部署指南
+# 🎵 音频工具MP3格式保持功能 - 部署指南
+
+## 📋 更新内容
+
+### 🆕 新功能特性
+- **MP3格式智能保持**: 上传MP3，输出MP3，真正保持格式
+- **LAME.js编码器**: 使用业界标准MP3编码库
+- **200MB文件支持**: 文件大小限制从50MB提升至200MB
+- **超时问题解决**: 避免MediaRecorder兼容性问题
+
+### 🔧 技术改进
+- 专用MP3处理流程 (`processMp3ToMp3()`)
+- 优化的音频编码算法 (`audioBufferToMp3()`)
+- 完整的错误处理和降级机制
+- 实时编码进度显示
+
+## 🚀 云服务器部署
+
+### 方法一：完整更新脚本
+
+```bash
+# 上传并执行完整更新脚本
+cd /www/wwwroot/tools-all-for-me-main/html-to-png-converter
+chmod +x update-server.sh
+sudo ./update-server.sh
+```
+
+### 方法二：快速更新
+
+```bash
+# 使用快速更新脚本
+chmod +x quick-update.sh
+sudo ./quick-update.sh
+```
+
+### 方法三：手动更新流程
+
+```bash
+# 1. 进入项目根目录
+cd /www/wwwroot/tools-all-for-me-main
+
+# 2. 停止服务
+sudo pm2 stop html-to-png-converter
+
+# 3. 拉取最新代码
+sudo git pull origin main
+
+# 4. 切换到服务目录
+cd html-to-png-converter
+
+# 5. 应用增强版文件（如果存在）
+sudo cp utils/converter_enhanced.js utils/converter.js 2>/dev/null || true
+sudo cp utils/browserPool_enhanced.js utils/browserPool.js 2>/dev/null || true
+
+# 6. 重启服务
+sudo pm2 restart html-to-png-converter
+
+# 7. 验证状态
+sudo pm2 status
+sudo pm2 logs html-to-png-converter --lines 10
+```
+
+## 🔍 部署验证
+
+### 1. 服务状态检查
+```bash
+sudo pm2 status html-to-png-converter
+sudo pm2 logs html-to-png-converter --lines 20
+```
+
+### 2. API健康检查
+```bash
+curl http://localhost:3003/api/health
+curl http://localhost:3003/audio
+```
+
+### 3. 外部访问测试
+- 音频工具: http://tool.cihebi.vip/audio
+- 健康检查: http://tool.cihebi.vip/api/health
+- 系统信息: http://tool.cihebi.vip/api/system/info
+
+## 🧪 功能测试
+
+### MP3格式保持测试
+1. 访问 http://tool.cihebi.vip/audio
+2. 上传一个MP3文件（可以测试较大文件，最大200MB）
+3. 调整音量到非100%值
+4. 点击"开始处理音频"
+5. 验证输出文件为MP3格式
+
+### 预期结果
+- ✅ 上传：`test.mp3` → 输出：`test_volume_150%.mp3`
+- ✅ 处理进度：显示"(MP3→MP3保持格式)"
+- ✅ 控制台日志：显示LAME编码器工作状态
+- ✅ 文件大小：支持最大200MB上传
+
+## 🛠️ 故障排除
+
+### 常见问题
+
+#### 1. LAME编码器加载失败
+**现象**: 控制台显示"LAME编码器未加载"
+**解决**: 
+- 检查CDN连接: https://cdn.jsdelivr.net/npm/lamejs@1.2.0/lame.min.js
+- 会自动降级到WAV格式
+
+#### 2. MP3编码失败
+**现象**: 处理后获得WAV文件而非MP3
+**原因**: LAME编码过程出错，自动降级
+**解决**: 检查浏览器控制台错误日志
+
+#### 3. 服务启动失败
+```bash
+# 查看详细日志
+sudo pm2 logs html-to-png-converter --lines 50
+
+# 重启服务
+sudo pm2 restart html-to-png-converter
+
+# 如果仍然失败，删除PM2进程重新启动
+sudo pm2 delete html-to-png-converter
+cd /www/wwwroot/tools-all-for-me-main/html-to-png-converter
+sudo pm2 start server_enhanced.js --name html-to-png-converter
+```
+
+#### 4. 文件上传超过200MB
+**现象**: 显示"文件大小不能超过200MB"
+**解决**: 这是预期行为，如需更大限制可修改代码
+
+## 📊 性能监控
+
+### PM2监控
+```bash
+sudo pm2 monit
+sudo pm2 status
+sudo pm2 logs html-to-png-converter --follow
+```
+
+### 资源使用
+- **内存使用**: 预期80-200MB（处理大文件时会临时增加）
+- **CPU使用**: MP3编码时会有短暂高峰
+- **磁盘空间**: 确保有足够空间处理大文件
+
+## 🔄 回滚方案
+
+如果更新后出现问题，可以快速回滚：
+
+```bash
+cd /www/wwwroot/tools-all-for-me-main
+sudo git log --oneline -5  # 查看最近的提交
+sudo git reset --hard HEAD~1  # 回滚到上一个版本
+sudo pm2 restart html-to-png-converter
+```
+
+## 📞 技术支持
+
+### 关键文件位置
+- 音频页面: `/www/wwwroot/tools-all-for-me-main/html-to-png-converter/public/audio.html`
+- 音频脚本: `/www/wwwroot/tools-all-for-me-main/html-to-png-converter/public/audio.js`
+- 服务器脚本: `/www/wwwroot/tools-all-for-me-main/html-to-png-converter/server_enhanced.js`
+
+### 日志位置
+- PM2日志: `~/.pm2/logs/`
+- 系统日志: `/var/log/nginx/` (如果使用Nginx)
+
+---
+
+**部署状态**: ✅ 准备就绪  
+**最后更新**: 2025-07-26  
+**版本**: MP3格式保持功能 v1.0  
+**GitHub仓库**: https://github.com/cihebi2/tools-all-for-me
+
+---
+
+# 🚀 原部署指南（保留参考）
 
 本文档介绍如何将tools-all-for-me项目部署到Linux服务器上。
 
