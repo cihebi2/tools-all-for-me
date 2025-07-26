@@ -132,9 +132,9 @@ class AudioVolumeAdjuster {
             return;
         }
 
-        // 验证文件大小 (50MB)
-        if (file.size > 50 * 1024 * 1024) {
-            this.showError('文件大小不能超过50MB');
+        // 验证文件大小 (200MB)
+        if (file.size > 200 * 1024 * 1024) {
+            this.showError('文件大小不能超过200MB');
             return;
         }
 
@@ -355,13 +355,14 @@ class AudioVolumeAdjuster {
         }
     }
 
-    // 新的音频处理方法 - 保持原格式
+    // 智能音频处理方法 - 保持原格式
     async processAudioWithOriginalFormat() {
-        console.log('开始音频处理');
+        console.log('开始智能音频处理，保持原格式');
         const volume = parseInt(this.volumeSlider.value);
         const gainValue = volume / 100;
 
         console.log('音量设置:', volume + '%', '增益值:', gainValue);
+        console.log('原文件格式:', this.currentFile.type);
 
         // 如果音量是100%，直接返回原文件
         if (gainValue === 1.0) {
@@ -395,11 +396,10 @@ class AudioVolumeAdjuster {
             source.start();
             const renderedBuffer = await offlineContext.startRendering();
             
-            console.log('离线渲染完成，开始编码');
+            console.log('离线渲染完成，开始智能格式编码');
 
-            // 临时简化：直接使用WAV格式避免MediaRecorder问题
-            console.log('使用WAV格式编码（临时简化版本）');
-            return await this.audioBufferToWav(renderedBuffer);
+            // 🆕 智能格式保持：根据原文件类型选择最佳编码方式
+            return await this.encodeWithOriginalFormat(renderedBuffer);
 
         } catch (error) {
             console.error('音频处理过程中出错:', error);
@@ -435,7 +435,506 @@ class AudioVolumeAdjuster {
         return processedBuffer;
     }
 
-    // 根据原文件格式编码音频缓冲区
+    // 🆕 智能格式编码 - 优先保持原格式
+    async encodeWithOriginalFormat(buffer) {
+        const originalType = this.currentFile.type.toLowerCase();
+        const originalName = this.currentFile.name.toLowerCase();
+        
+        console.log('智能格式编码开始');
+        console.log('原文件MIME类型:', originalType);
+        console.log('原文件名:', originalName);
+        
+        // 格式检测和处理策略
+        const formatStrategy = this.detectFormatStrategy(originalType, originalName);
+        console.log('选择的编码策略:', formatStrategy);
+        
+        try {
+            switch (formatStrategy.method) {
+                case 'mp3ToMp3':
+                    console.log(`🎵 MP3专用处理：${formatStrategy.description}`);
+                    return await this.processMp3ToMp3(buffer, formatStrategy);
+                    
+                case 'mp3ToWav':
+                    console.log(`🎵 MP3专用处理：${formatStrategy.description}`);
+                    return await this.processMp3ToWav(buffer, formatStrategy);
+                    
+                case 'mediaRecorder':
+                    console.log('使用MediaRecorder保持接近原格式');
+                    try {
+                        return await this.encodeWithMediaRecorderSmart(buffer, formatStrategy);
+                    } catch (mediaRecorderError) {
+                        console.warn(`MediaRecorder处理${formatStrategy.originalFormat}失败:`, mediaRecorderError);
+                        
+                        // 如果设置了快速降级到WAV，直接使用WAV
+                        if (formatStrategy.fallbackToWav) {
+                            console.log(`${formatStrategy.originalFormat}快速降级到WAV格式`);
+                            return await this.audioBufferToWav(buffer);
+                        }
+                        
+                        throw mediaRecorderError;
+                    }
+                    
+                case 'wav':
+                    console.log('使用WAV格式（原文件为WAV或未知格式）');
+                    return await this.audioBufferToWav(buffer);
+                    
+                case 'direct':
+                    console.log('音量未改变，直接返回原文件');
+                    return this.currentFile;
+                    
+                default:
+                    console.log('降级到WAV格式');
+                    return await this.audioBufferToWav(buffer);
+            }
+        } catch (error) {
+            console.warn('首选编码方式失败，最终降级到WAV:', error);
+            return await this.audioBufferToWav(buffer);
+        }
+    }
+
+    // 🆕 智能格式策略检测
+    detectFormatStrategy(mimeType, fileName) {
+        // 获取文件扩展名
+        const ext = fileName.includes('.') ? fileName.split('.').pop() : '';
+        
+        // MP3格式处理（保持MP3格式）
+        if (mimeType.includes('mpeg') || mimeType.includes('mp3') || ext === 'mp3') {
+            return {
+                method: 'mp3ToMp3',  // 专门的MP3保持处理方法
+                targetMimeType: 'audio/mpeg',
+                targetExtension: '.mp3',
+                originalFormat: 'mp3',
+                description: 'MP3音量调整并保持格式'
+            };
+        }
+        
+        // AAC格式处理
+        if (mimeType.includes('aac') || mimeType.includes('mp4') || ext === 'aac' || ext === 'm4a') {
+            return {
+                method: 'mediaRecorder',
+                targetMimeType: 'audio/mp4',
+                targetExtension: '.m4a',
+                originalFormat: 'aac'
+            };
+        }
+        
+        // OGG格式处理
+        if (mimeType.includes('ogg') || ext === 'ogg') {
+            return {
+                method: 'mediaRecorder',
+                targetMimeType: 'audio/ogg;codecs=opus',
+                targetExtension: '.ogg',
+                originalFormat: 'ogg'
+            };
+        }
+        
+        // WEBM格式处理
+        if (mimeType.includes('webm') || ext === 'webm') {
+            return {
+                method: 'mediaRecorder',
+                targetMimeType: 'audio/webm;codecs=opus',
+                targetExtension: '.webm',
+                originalFormat: 'webm'
+            };
+        }
+        
+        // WAV格式处理（优先保持）
+        if (mimeType.includes('wav') || ext === 'wav') {
+            return {
+                method: 'wav',
+                targetMimeType: 'audio/wav',
+                targetExtension: '.wav',
+                originalFormat: 'wav'
+            };
+        }
+        
+        // 未知格式，默认使用WAV
+        return {
+            method: 'wav',
+            targetMimeType: 'audio/wav',
+            targetExtension: '.wav',
+            originalFormat: 'unknown'
+        };
+    }
+
+    // 🆕 MP3专用处理方法 - 保持MP3格式
+    async processMp3ToMp3(buffer, strategy) {
+        console.log('🎵 开始MP3专用处理，保持MP3格式');
+        
+        try {
+            // 检查LAME编码器是否可用
+            if (typeof lamejs === 'undefined') {
+                console.warn('LAME编码器未加载，降级到WAV');
+                return await this.audioBufferToWavOptimized(buffer);
+            }
+            
+            // 使用LAME编码器将AudioBuffer转换为MP3
+            const mp3Blob = await this.audioBufferToMp3(buffer);
+            
+            // 标记这是处理后的MP3
+            mp3Blob.originalFormat = 'mp3';
+            mp3Blob.suggestedExtension = '.mp3';
+            mp3Blob.conversionInfo = 'MP3音量调整并保持格式';
+            
+            console.log('✅ MP3处理完成，文件大小:', (mp3Blob.size / 1024).toFixed(2), 'KB');
+            return mp3Blob;
+            
+        } catch (error) {
+            console.error('❌ MP3处理失败，降级到WAV:', error);
+            // 如果MP3编码失败，降级到WAV
+            return await this.audioBufferToWavOptimized(buffer);
+        }
+    }
+
+    // 🆕 AudioBuffer转MP3编码
+    async audioBufferToMp3(buffer) {
+        console.log('🎵 开始MP3编码');
+        
+        const numberOfChannels = buffer.numberOfChannels;
+        const sampleRate = buffer.sampleRate;
+        const length = buffer.length;
+        
+        console.log(`MP3编码参数: ${numberOfChannels}声道, ${sampleRate}Hz, ${length}采样点`);
+        
+        // 创建LAME编码器
+        const mp3encoder = new lamejs.Mp3Encoder(numberOfChannels, sampleRate, 128); // 128kbps比特率
+        
+        const mp3Data = [];
+        const blockSize = 1152; // MP3编码块大小
+        
+        // 转换AudioBuffer为Int16Array格式
+        const leftChannel = this.floatTo16BitPCM(buffer.getChannelData(0));
+        const rightChannel = numberOfChannels > 1 ? this.floatTo16BitPCM(buffer.getChannelData(1)) : leftChannel;
+        
+        // 分块编码MP3
+        for (let i = 0; i < length; i += blockSize) {
+            const leftChunk = leftChannel.subarray(i, i + blockSize);
+            const rightChunk = rightChannel.subarray(i, i + blockSize);
+            
+            let mp3buf;
+            if (numberOfChannels === 1) {
+                mp3buf = mp3encoder.encodeBuffer(leftChunk);
+            } else {
+                mp3buf = mp3encoder.encodeBuffer(leftChunk, rightChunk);
+            }
+            
+            if (mp3buf.length > 0) {
+                mp3Data.push(new Uint8Array(mp3buf));
+            }
+            
+            // 显示编码进度
+            if (i % (blockSize * 10) === 0) {
+                const progress = ((i / length) * 100).toFixed(1);
+                console.log(`MP3编码进度: ${progress}%`);
+            }
+        }
+        
+        // 完成编码
+        const finalBuffer = mp3encoder.flush();
+        if (finalBuffer.length > 0) {
+            mp3Data.push(new Uint8Array(finalBuffer));
+        }
+        
+        console.log('✅ MP3编码完成');
+        
+        // 合并所有MP3数据
+        const totalLength = mp3Data.reduce((acc, arr) => acc + arr.length, 0);
+        const result = new Uint8Array(totalLength);
+        let offset = 0;
+        
+        for (const chunk of mp3Data) {
+            result.set(chunk, offset);
+            offset += chunk.length;
+        }
+        
+        return new Blob([result], { type: 'audio/mpeg' });
+    }
+
+    // 🆕 Float32Array转Int16Array（MP3编码需要）
+    floatTo16BitPCM(input) {
+        const output = new Int16Array(input.length);
+        for (let i = 0; i < input.length; i++) {
+            const sample = Math.max(-1, Math.min(1, input[i]));
+            output[i] = sample * 0x7FFF;
+        }
+        return output;
+    }
+
+    // 🆕 MP3专用处理方法 - 直接转WAV，避免MediaRecorder问题
+    async processMp3ToWav(buffer, strategy) {
+        console.log('🎵 开始MP3专用处理，转换为高质量WAV');
+        
+        try {
+            // 直接使用优化的WAV编码，避免复杂的MediaRecorder逻辑
+            const wavBlob = await this.audioBufferToWavOptimized(buffer);
+            
+            // 标记这是从MP3转换来的
+            wavBlob.originalFormat = 'mp3';
+            wavBlob.suggestedExtension = '.wav';
+            wavBlob.conversionInfo = 'MP3→WAV高质量转换';
+            
+            console.log('✅ MP3转WAV完成，文件大小:', (wavBlob.size / 1024).toFixed(2), 'KB');
+            return wavBlob;
+            
+        } catch (error) {
+            console.error('❌ MP3转WAV失败:', error);
+            throw new Error(`MP3处理失败: ${error.message}`);
+        }
+    }
+
+    // 🆕 优化的WAV编码（专为MP3转换优化）
+    async audioBufferToWavOptimized(buffer) {
+        console.log('🎵 开始优化WAV编码');
+        
+        const numberOfChannels = buffer.numberOfChannels;
+        const sampleRate = buffer.sampleRate;
+        const length = buffer.length;
+        
+        console.log(`音频参数: ${numberOfChannels}声道, ${sampleRate}Hz, ${length}采样点`);
+        
+        // 计算WAV文件大小
+        const arrayBuffer = new ArrayBuffer(44 + length * numberOfChannels * 2);
+        const view = new DataView(arrayBuffer);
+        
+        // WAV文件头
+        const writeString = (offset, string) => {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        };
+
+        // RIFF头
+        writeString(0, 'RIFF');
+        view.setUint32(4, 36 + length * numberOfChannels * 2, true);
+        writeString(8, 'WAVE');
+        
+        // fmt子块
+        writeString(12, 'fmt ');
+        view.setUint32(16, 16, true);  // 子块大小
+        view.setUint16(20, 1, true);   // 音频格式 (PCM)
+        view.setUint16(22, numberOfChannels, true);
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, sampleRate * numberOfChannels * 2, true);  // 字节率
+        view.setUint16(32, numberOfChannels * 2, true);  // 块对齐
+        view.setUint16(34, 16, true);  // 每采样位数
+        
+        // data子块
+        writeString(36, 'data');
+        view.setUint32(40, length * numberOfChannels * 2, true);
+
+        // 🚀 优化的音频数据写入（更快的处理速度）
+        let offset = 44;
+        const maxValue = 0x7FFF;
+        
+        // 交错写入多声道数据
+        for (let i = 0; i < length; i++) {
+            for (let channel = 0; channel < numberOfChannels; channel++) {
+                // 获取样本值并限制在有效范围内
+                let sample = buffer.getChannelData(channel)[i];
+                
+                // 防止削波和溢出
+                sample = Math.max(-1, Math.min(1, sample));
+                
+                // 转换为16位整数
+                const intSample = Math.round(sample * maxValue);
+                view.setInt16(offset, intSample, true);
+                offset += 2;
+            }
+            
+            // 每1000个样本打印一次进度（调试用）
+            if (i % (length / 10) === 0) {
+                const progress = ((i / length) * 100).toFixed(1);
+                console.log(`WAV编码进度: ${progress}%`);
+            }
+        }
+
+        console.log('✅ WAV编码完成');
+        return new Blob([arrayBuffer], { type: 'audio/wav' });
+    }
+
+    // 🆕 智能MediaRecorder编码
+    async encodeWithMediaRecorderSmart(buffer, strategy) {
+        return new Promise((resolve, reject) => {
+            try {
+                console.log(`开始${strategy.originalFormat}格式的智能编码`);
+                
+                // 创建音频源
+                const context = new AudioContext();
+                const source = context.createBufferSource();
+                const destination = context.createMediaStreamDestination();
+                
+                source.buffer = buffer;
+                source.connect(destination);
+
+                // 选择最佳编码格式
+                let mimeType = strategy.targetMimeType;
+                
+                // 检查浏览器支持情况并调整
+                if (!MediaRecorder.isTypeSupported(mimeType)) {
+                    console.log(`不支持${mimeType}，尝试备选格式`);
+                    
+                    // 备选格式列表
+                    const fallbackTypes = [
+                        'audio/webm;codecs=opus',
+                        'audio/webm',
+                        'audio/ogg;codecs=opus',
+                        'audio/ogg'
+                    ];
+                    
+                    mimeType = fallbackTypes.find(type => MediaRecorder.isTypeSupported(type));
+                    
+                    if (!mimeType) {
+                        throw new Error('浏览器不支持MediaRecorder音频编码');
+                    }
+                    
+                    console.log(`使用备选格式: ${mimeType}`);
+                }
+
+                const mediaRecorder = new MediaRecorder(destination.stream, {
+                    mimeType: mimeType,
+                    audioBitsPerSecond: this.calculateOptimalBitrate(strategy.originalFormat)
+                });
+
+                const chunks = [];
+                let isResolved = false;
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        chunks.push(event.data);
+                        console.log('收集音频数据块，大小:', event.data.size);
+                    }
+                };
+
+                mediaRecorder.onstop = () => {
+                    if (!isResolved) {
+                        isResolved = true;
+                        
+                        // 清理计时器
+                        clearTimeout(normalStopTimer);
+                        clearTimeout(safetyTimer);
+                        
+                        const blob = new Blob(chunks, { type: mimeType });
+                        
+                        // 更新blob的扩展名信息
+                        blob.suggestedExtension = this.getMimeTypeExtension(mimeType);
+                        blob.originalFormat = strategy.originalFormat;
+                        
+                        console.log(`✅ ${strategy.originalFormat}编码完成，输出格式:`, mimeType);
+                        console.log('✅ 输出文件大小:', (blob.size / 1024).toFixed(2), 'KB');
+                        
+                        context.close().then(() => {
+                            resolve(blob);
+                        }).catch(() => {
+                            resolve(blob); // 即使关闭失败也要resolve
+                        });
+                    }
+                };
+
+                mediaRecorder.onerror = (error) => {
+                    console.error(`❌ ${strategy.originalFormat}编码错误:`, error);
+                    if (!isResolved) {
+                        isResolved = true;
+                        
+                        // 清理计时器
+                        clearTimeout(normalStopTimer);
+                        clearTimeout(safetyTimer);
+                        
+                        context.close().catch(() => {});
+                        reject(new Error(`${strategy.originalFormat}编码失败: ${error.message || '未知错误'}`));
+                    }
+                };
+
+                // 音频时长计算
+                const duration = buffer.length / buffer.sampleRate;
+                console.log(`${strategy.originalFormat}音频时长:`, duration.toFixed(2), '秒');
+
+                // 开始录制
+                mediaRecorder.start();
+                source.start();
+
+                // 🆕 优化的超时设置（增加更长的安全时间）
+                const baseDuration = duration * 1000;
+                const normalStopTime = baseDuration + 1000;  // 正常停止时间：音频时长 + 1秒
+                const safetyTimeout = Math.max(baseDuration + 8000, 20000);  // 安全超时：至少20秒，或音频时长+8秒
+                
+                console.log(`${strategy.originalFormat}音频: ${duration.toFixed(2)}秒，正常停止: ${normalStopTime}ms，安全超时: ${safetyTimeout}ms`);
+                
+                let normalStopTriggered = false;
+                
+                // 正常停止计时器
+                const normalStopTimer = setTimeout(() => {
+                    normalStopTriggered = true;
+                    if (mediaRecorder.state === 'recording') {
+                        console.log('正常时间到达，停止MediaRecorder');
+                        try {
+                            mediaRecorder.stop();
+                        } catch (e) {
+                            console.warn('正常停止MediaRecorder失败:', e);
+                        }
+                    }
+                }, normalStopTime);
+                
+                // 安全超时计时器
+                const safetyTimer = setTimeout(() => {
+                    console.warn(`${strategy.originalFormat}处理超时，强制终止`);
+                    if (mediaRecorder.state === 'recording') {
+                        try {
+                            mediaRecorder.stop();
+                        } catch (e) {
+                            console.warn('强制停止MediaRecorder失败:', e);
+                        }
+                    }
+                    if (!isResolved) {
+                        isResolved = true;
+                        context.close().catch(() => {});
+                        reject(new Error(`${strategy.originalFormat}处理超时 - 已自动降级到WAV格式`));
+                    }
+                    clearTimeout(normalStopTimer);
+                }, safetyTimeout);
+
+            } catch (error) {
+                console.error('MediaRecorder初始化失败:', error);
+                // 注意：由于是初始化失败，计时器还未创建，无需清理
+                reject(error);
+            }
+        });
+    }
+
+    // 🆕 计算最佳比特率
+    calculateOptimalBitrate(originalFormat) {
+        const bitrateMap = {
+            'mp3': 128000,    // MP3标准比特率
+            'aac': 128000,    // AAC标准比特率
+            'ogg': 112000,    // OGG Opus标准比特率
+            'webm': 112000,   // WebM Opus标准比特率
+            'wav': 1411200,   // WAV无损比特率
+            'unknown': 128000 // 默认比特率
+        };
+        
+        return bitrateMap[originalFormat] || 128000;
+    }
+
+    // 🆕 根据MIME类型获取建议的文件扩展名
+    getMimeTypeExtension(mimeType) {
+        const extensionMap = {
+            'audio/webm': '.webm',
+            'audio/ogg': '.ogg',
+            'audio/mp4': '.m4a',
+            'audio/mpeg': '.mp3',
+            'audio/wav': '.wav'
+        };
+        
+        // 找到匹配的扩展名
+        for (const [type, ext] of Object.entries(extensionMap)) {
+            if (mimeType.includes(type.split('/')[1])) {
+                return ext;
+            }
+        }
+        
+        return '.webm'; // 默认扩展名
+    }
+
+    // 根据原文件格式编码音频缓冲区（保留作为备用方法）
     async encodeAudioBuffer(buffer, originalMimeType) {
         // 获取原文件扩展名
         const originalType = originalMimeType.toLowerCase();
@@ -634,6 +1133,22 @@ class AudioVolumeAdjuster {
     async simulateProgress() {
         return new Promise((resolve) => {
             let progress = 0;
+            const originalFormat = this.currentFile.type.toLowerCase();
+            let formatInfo = '';
+            
+            // 根据格式显示不同的处理提示
+            if (originalFormat.includes('mp3') || originalFormat.includes('mpeg')) {
+                formatInfo = '(MP3→MP3保持格式)';
+            } else if (originalFormat.includes('wav')) {
+                formatInfo = '(保持WAV格式)';
+            } else if (originalFormat.includes('aac') || originalFormat.includes('mp4')) {
+                formatInfo = '(AAC→M4A转换)';
+            } else if (originalFormat.includes('ogg')) {
+                formatInfo = '(保持OGG格式)';
+            } else {
+                formatInfo = '(智能格式处理)';
+            }
+            
             const interval = setInterval(() => {
                 progress += Math.random() * 15;
                 if (progress >= 100) {
@@ -643,8 +1158,8 @@ class AudioVolumeAdjuster {
                 }
                 
                 this.progressFill.style.width = `${progress}%`;
-                this.progressText.textContent = `正在处理音频... ${Math.round(progress)}%`;
-            }, 100);
+                this.progressText.textContent = `正在处理音频 ${formatInfo}... ${Math.round(progress)}%`;
+            }, 150);
         });
     }
 
@@ -657,24 +1172,72 @@ class AudioVolumeAdjuster {
         const url = URL.createObjectURL(this.processedBlob);
         this.downloadBtn.href = url;
         
-        // 生成文件名，保持原扩展名
+        // 智能生成文件名，尽量保持原格式
         const originalName = this.currentFile.name;
         const lastDotIndex = originalName.lastIndexOf('.');
         const nameWithoutExt = lastDotIndex > 0 ? originalName.substring(0, lastDotIndex) : originalName;
-        const originalExt = lastDotIndex > 0 ? originalName.substring(lastDotIndex) : '';
         const volume = this.volumeSlider.value;
         
-        // 根据处理后的blob类型确定扩展名
-        let fileExt = originalExt;
-        if (this.processedBlob.type.includes('wav')) {
-            fileExt = '.wav';
-        } else if (this.processedBlob.type.includes('webm')) {
-            fileExt = '.webm';
-        } else if (this.processedBlob.type.includes('ogg')) {
-            fileExt = '.ogg';
+        // 🆕 智能扩展名检测
+        let fileExt = this.getSmartFileExtension();
+        
+        const finalFileName = `${nameWithoutExt}_volume_${volume}%${fileExt}`;
+        this.downloadBtn.download = finalFileName;
+        
+        console.log('生成下载文件名:', finalFileName);
+        console.log('输出blob类型:', this.processedBlob.type);
+        console.log('建议扩展名:', fileExt);
+    }
+
+    // 🆕 智能获取文件扩展名
+    getSmartFileExtension() {
+        // 如果blob有建议的扩展名（来自智能编码）
+        if (this.processedBlob.suggestedExtension) {
+            console.log('使用智能编码建议的扩展名:', this.processedBlob.suggestedExtension);
+            return this.processedBlob.suggestedExtension;
         }
         
-        this.downloadBtn.download = `${nameWithoutExt}_volume_${volume}%${fileExt}`;
+        // 根据原文件尝试保持扩展名
+        const originalName = this.currentFile.name.toLowerCase();
+        const originalType = this.currentFile.type.toLowerCase();
+        
+        // 🎵 MP3专用处理：如果原文件是MP3，保持.mp3
+        if (originalType.includes('mp3') || originalType.includes('mpeg') || originalName.includes('.mp3')) {
+            console.log('MP3文件保持MP3格式');
+            return '.mp3';
+        }
+        
+        // 如果音量是100%且直接返回原文件
+        if (this.processedBlob === this.currentFile) {
+            const lastDotIndex = originalName.lastIndexOf('.');
+            return lastDotIndex > 0 ? originalName.substring(lastDotIndex) : '.audio';
+        }
+        
+        // 根据blob的MIME类型确定扩展名
+        const blobType = this.processedBlob.type.toLowerCase();
+        
+        if (blobType.includes('wav')) {
+            return '.wav';
+        } else if (blobType.includes('webm')) {
+            return '.webm';
+        } else if (blobType.includes('ogg')) {
+            return '.ogg';
+        } else if (blobType.includes('mp4')) {
+            return '.m4a';
+        } else if (blobType.includes('mpeg')) {
+            return '.mp3';
+        }
+        
+        // 尝试保持原扩展名（如果处理逻辑没有改变格式）
+        const lastDotIndex = originalName.lastIndexOf('.');
+        if (lastDotIndex > 0) {
+            const originalExt = originalName.substring(lastDotIndex);
+            console.log('保持原扩展名:', originalExt);
+            return originalExt;
+        }
+        
+        // 默认扩展名
+        return '.wav';  // 改为默认WAV
     }
 
     // 时间显示更新
