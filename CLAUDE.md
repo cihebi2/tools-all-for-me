@@ -267,6 +267,7 @@ pm2 restart html-to-png-converter
 **最后更新**: 2025-07-24 (新增HTML编辑器功能)  
 **下次检查**: 建议每周检查服务状态  
 **GitHub仓库**: https://github.com/cihebi2/tools-all-for-me  
+**GitHub Token**: [REDACTED] (stored securely for deployment automation)  
 **负责人记录**: 所有配置和部署流程已完整记录并测试验证
 
 ## 🎨 HTML编辑器详细说明

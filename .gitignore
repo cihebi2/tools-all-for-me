@@ -80,4 +80,4 @@ server_test.log
 # Specific to this project
 html-to-png-converter/node_modules/
 html-to-png-converter/dist/
-html-to-png-converter/package-lock.json 
+html-to-png-converter/package-lock.json html-to-png-converter/core
